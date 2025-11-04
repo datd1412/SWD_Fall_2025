@@ -71,10 +71,27 @@ const vehicles = [
 
 export default function DashboardList() {
   const navigate = useNavigate();
+  const [selectedStatus, setSelectedStatus] = React.useState('all');
 
   const handleViewDetail = (vehicle) => {
-    navigate(`/dashboard/checkout/${encodeURIComponent(vehicle.license)}`, { state: { vehicle } });
+    navigate(`/dashboard/check-in/${encodeURIComponent(vehicle.license)}`, { state: { vehicle } });
   };
+
+  const filteredVehicles = React.useMemo(() => {
+    if (selectedStatus === 'all') return vehicles;
+    return vehicles.filter(v => {
+      switch (selectedStatus) {
+        case 'ready':
+          return v.status === 'Sẵn sàng';
+        case 'booked':
+          return v.status === 'Đã đặt trước';
+        case 'rented':
+          return v.status === 'Đang thuê';
+        default:
+          return true;
+      }
+    });
+  }, [selectedStatus]);
 
   return (
     <Box>
@@ -104,17 +121,39 @@ export default function DashboardList() {
 
       {/* Bộ lọc */}
       <Stack direction="row" spacing={1.5} mb={3}>
-        <Button variant="outlined" color="success">
+        <Button 
+          variant={selectedStatus === 'all' ? 'contained' : 'outlined'} 
+          color="success"
+          onClick={() => setSelectedStatus('all')}
+        >
           Tất cả xe
         </Button>
-        <Button variant="outlined">Xe sẵn sàng</Button>
-        <Button variant="outlined">Đã đặt trước</Button>
-        <Button variant="contained" color="success">Đang cho thuê</Button>
+        <Button 
+          variant={selectedStatus === 'ready' ? 'contained' : 'outlined'} 
+          color="success"
+          onClick={() => setSelectedStatus('ready')}
+        >
+          Xe sẵn sàng
+        </Button>
+        <Button 
+          variant={selectedStatus === 'booked' ? 'contained' : 'outlined'} 
+          color="success"
+          onClick={() => setSelectedStatus('booked')}
+        >
+          Đã đặt trước
+        </Button>
+        <Button 
+          variant={selectedStatus === 'rented' ? 'contained' : 'outlined'} 
+          color="success"
+          onClick={() => setSelectedStatus('rented')}
+        >
+          Đang cho thuê
+        </Button>
       </Stack>
 
       {/* Danh sách xe */}
       <Grid container spacing={2}>
-        {vehicles.map((v) => (
+        {filteredVehicles.map((v) => (
           <Grid item xs={12} sm={6} md={4} key={v.license}>
             <VehicleCard {...v} onViewDetail={handleViewDetail} />
           </Grid>

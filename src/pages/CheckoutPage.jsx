@@ -1,459 +1,257 @@
-import React from "react";
+import React, { useState, useEffect } from 'react';
 import {
   Box,
-  Card,
-  CardMedia,
-  CardContent,
-  Typography,
-  Button,
-  Chip,
-  Stack,
   Grid,
   Paper,
+  Card,
+  CardContent,
+  CardMedia,
+  Typography,
+  Stack,
+  Chip,
+  TextField,
+  Button,
   Divider,
-} from "@mui/material";
-import { useNavigate, useLocation } from "react-router-dom";
-import BoltIcon from "@mui/icons-material/Bolt";
-import SpeedIcon from "@mui/icons-material/Speed";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
-
-// Mock data for demo - replace with API calls later
-const currentRental = {
-  status: "ĐANG HOẠT ĐỘNG",
-  customer: "Trần Thị C",
-  contractId: "#RT-00123",
-  startDate: "15/01/2025 08:00",
-  endDate: "17/01/2025 08:00",
-};
-
-const rentalHistory = [
-  {
-    id: 1,
-    customer: "Nguyễn Văn A",
-    period: "10/01/2025 - 12/01/2025",
-    duration: "2 ngày",
-    distance: "250 km",
-    location: "Chi nhánh Quận 1",
-    status: "Hoàn thành",
-  },
-  {
-    id: 2,
-    customer: "Lê Thị B",
-    period: "05/01/2025 - 08/01/2025",
-    duration: "3 ngày",
-    distance: "420 km",
-    status: "Hoàn thành",
-  },
-  {
-    id: 3,
-    customer: "Phạm Văn D",
-    period: "28/12/2024 - 01/01/2025",
-    duration: "4 ngày",
-    distance: "680 km",
-    status: "Hoàn thành",
-  },
-  {
-    id: 4,
-    customer: "Hoàng Thị E",
-    period: "20/12/2024 - 22/12/2024",
-    duration: "2 ngày",
-    distance: "180 km",
-    status: "Hoàn thành",
-  },
-];
+  Avatar,
+  IconButton,
+} from '@mui/material';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import PhotoCameraIcon from '@mui/icons-material/PhotoCamera';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import CloseIcon from '@mui/icons-material/Close';
+import Snackbar from '@mui/material/Snackbar';
+import MuiAlert from '@mui/material/Alert';
+import CircularProgress from '@mui/material/CircularProgress';
+import { useNavigate, useLocation, useParams } from 'react-router-dom';
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
   const location = useLocation();
+  const params = useParams();
   const vehicle = location.state?.vehicle || {
-    name: "Tesla Model 3",
-    licensePlate: "30A-99999",
-    type: "EV_Car",
-    battery: 72,
-    odo: 15600,
-    imageUrl: "https://example.com/tesla-model-3.jpg", // Replace with actual image URL
+    name: 'Honda City RS',
+    license: params.vehicleId || '59T2-87343',
+    type: 'EV_Car',
+    battery: 95,
+    odo: 12500,
+    branch: 'Chi nhánh Quận 1',
+    imageUrl: '',
+    customer: 'Nguyễn Văn A',
+    start: '10/01/2025 09:00',
+    end: '12/01/2025 09:00',
+    reservationId: '#RT-002401',
+  };
+
+  // Images state for 6 required photos
+  const [images, setImages] = useState(Array(6).fill(null));
+  const [previews, setPreviews] = useState(Array(6).fill(''));
+  const [submitting, setSubmitting] = useState(false);
+  const [snack, setSnack] = useState({ open: false, msg: '', severity: 'success' });
+
+  const handleFileChange = (index, e) => {
+    const file = e.target.files && e.target.files[0];
+    if (!file) return;
+    // basic size validation (5MB)
+    if (file.size > 5 * 1024 * 1024) {
+      setSnack({ open: true, msg: 'Kích thước ảnh tối đa 5MB', severity: 'error' });
+      return;
+    }
+    const url = URL.createObjectURL(file);
+    setImages((prev) => {
+      const next = [...prev];
+      next[index] = file;
+      return next;
+    });
+    setPreviews((prev) => {
+      const next = [...prev];
+      // revoke previous if existed
+      if (next[index]) URL.revokeObjectURL(next[index]);
+      next[index] = url;
+      return next;
+    });
+  };
+
+  const removeImage = (index) => {
+    setImages((prev) => {
+      const next = [...prev];
+      next[index] = null;
+      return next;
+    });
+    setPreviews((prev) => {
+      const next = [...prev];
+      if (next[index]) URL.revokeObjectURL(next[index]);
+      next[index] = '';
+      return next;
+    });
+  };
+
+  useEffect(() => {
+    return () => {
+      previews.forEach((p) => p && URL.revokeObjectURL(p));
+    };
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  const handleSubmit = () => {
+    // validate: all 6 images present
+    const missing = images.some((i) => !i);
+    if (missing) {
+      setSnack({ open: true, msg: 'Vui lòng chụp đủ 6 ảnh trước khi xác nhận', severity: 'error' });
+      return;
+    }
+    setSubmitting(true);
+    // mock submit
+    setTimeout(() => {
+      setSubmitting(false);
+      setSnack({ open: true, msg: 'Xác nhận thành công — xe sẵn sàng cho thuê', severity: 'success' });
+      // optional: navigate back after short delay
+      // setTimeout(() => navigate('/dashboard'), 1000);
+    }, 1200);
   };
 
   return (
-    <Grid container spacing={3} sx={{ px: { xs: 2, md: 0 } }}>
-      {/* Left card - Vehicle details */}
-      <Grid item xs={12} md={5}>
-        <Card
-          sx={{
-            position: "relative",
-            height: "100%",
-            borderRadius: 3,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              transform: "translateY(-4px)",
-              boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-            },
-          }}
-        >
-          <Box sx={{ position: "relative" }}>
-            <CardMedia
-              component="img"
-              height="300"
-              image={vehicle.imageUrl}
-              alt={vehicle.name}
-              sx={{
-                objectFit: "cover",
-                borderRadius: "12px 12px 0 0",
-                bgcolor: "#f6faf7",
-              }}
-            />
-            <Chip
-              label="Đang cho thuê"
-              color="success"
-              sx={{
-                position: "absolute",
-                top: 16,
-                left: 16,
-                bgcolor: "rgba(47, 181, 108, 0.95)",
-                backdropFilter: "blur(4px)",
-                color: "white",
-                fontWeight: 600,
-                px: 1.5,
-                "& .MuiChip-label": {
-                  px: 0.5,
-                },
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-              }}
-            />
-          </Box>
-          <CardContent>
-            <Typography
-              variant="h5"
-              component="div"
-              fontWeight={700}
-              gutterBottom
-            >
-              {vehicle.name}
-            </Typography>
-            <Typography variant="subtitle1" color="text.secondary" gutterBottom>
-              Biển số: {vehicle.licensePlate}
-            </Typography>
-
-            <Stack direction="row" spacing={3} mt={2} mb={3}>
-              <Box>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  color="text.secondary"
+    <Grid container spacing={3}>
+          <Grid item xs={12} md={4}>
+            <Card sx={{ borderRadius: 3, boxShadow: '0 2px 12px rgba(0,0,0,0.06)' }}>
+              <Box sx={{ position: 'relative' }}>
+                <CardMedia
+                  component="div"
+                  sx={{ height: 180, bgcolor: 'linear-gradient(135deg,#A7F3D0,#6EE7B7)', display: 'flex', alignItems: 'center', justifyContent: 'center' }}
                 >
-                  <DirectionsCarIcon />
-                  <Typography variant="body2">Loại xe</Typography>
-                </Stack>
-                <Typography variant="body2" fontWeight={600} mt={0.5}>
-                  {vehicle.type}
-                </Typography>
+                  <Box sx={{ width: 80, height: 80, borderRadius: 2, bgcolor: '#eaf9ef', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
+                    <PhotoCameraIcon sx={{ color: '#2fb56c', fontSize: 34 }} />
+                  </Box>
+                </CardMedia>
+                <Chip label="Chuẩn bị" sx={{ position: 'absolute', top: 12, right: 12, bgcolor: '#fff3' }} />
               </Box>
+              <CardContent>
+                <Typography variant="h6" fontWeight={700}>{vehicle.name}</Typography>
+                <Typography variant="body2" color="text.secondary">Biển số: {vehicle.license}</Typography>
 
-              <Box>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  color="text.secondary"
-                >
-                  <BoltIcon />
-                  <Typography variant="body2">Mức pin</Typography>
+                <Stack spacing={1} mt={2}>
+                  <Typography variant="body2" color="text.secondary">Loại xe</Typography>
+                  <Typography variant="body1" fontWeight={600}>{vehicle.type}</Typography>
+
+                  <Typography variant="body2" color="text.secondary" mt={1}>Nhân viên giao xe</Typography>
+                  <Typography variant="body1" fontWeight={600}>Nguyễn Văn A</Typography>
+
+                  <Typography variant="body2" color="text.secondary" mt={1}>Khách thuê</Typography>
+                  <Typography variant="body1" fontWeight={600}>{vehicle.customer}</Typography>
+
+                  <Typography variant="body2" color="text.secondary" mt={1}>Thời gian</Typography>
+                  <Typography variant="body1" fontWeight={600}>{vehicle.start} - {vehicle.end}</Typography>
                 </Stack>
-                <Typography variant="body2" fontWeight={600} mt={0.5}>
-                  {vehicle.battery}%
-                </Typography>
-              </Box>
+              </CardContent>
+            </Card>
+          </Grid>
 
-              <Box>
-                <Stack
-                  direction="row"
-                  spacing={1}
-                  alignItems="center"
-                  color="text.secondary"
-                >
-                  <SpeedIcon />
-                  <Typography variant="body2">ODO</Typography>
-                </Stack>
-                <Typography variant="body2" fontWeight={600} mt={0.5}>
-                  {vehicle.odo?.toLocaleString()} km
-                </Typography>
-              </Box>
-            </Stack>
+          <Grid item xs={12} md={8}>
+            <Paper sx={{ p: 3, borderRadius: 3 }}>
+              <Stack spacing={3}>
+                <Box>
+                  <Paper sx={{ p: 2, bgcolor: '#fff6', borderRadius: 2, mb: 2 }}>
+                    <Typography variant="body2" color="error">Bạn có đơn thuê sắp theo vào {vehicle.start} - Vui lòng hoàn thành giao xe trước thời gian này</Typography>
+                  </Paper>
 
-            <Stack direction="row" spacing={2}>
-              <Button
-                variant="contained"
-                fullWidth
-                sx={{
-                  bgcolor: "#2fb56c",
-                  height: 48,
-                  borderRadius: 2,
-                  textTransform: "none",
-                  fontWeight: 600,
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    bgcolor: "#2aa561",
-                    transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(47, 181, 108, 0.4)",
-                  },
-                }}
-              >
-                Nhận xe
-              </Button>
-              <Button
-                variant="outlined"
-                fullWidth
-                onClick={() => navigate("/dashboard")}
-                sx={{
-                  height: 48,
-                  borderRadius: 2,
-                  borderColor: "#2fb56c",
-                  borderWidth: 1.5,
-                  color: "#2fb56c",
-                  textTransform: "none",
-                  fontWeight: 600,
-                  transition: "all 0.2s ease-in-out",
-                  "&:hover": {
-                    borderColor: "#2aa561",
-                    borderWidth: 1.5,
-                    color: "#2aa561",
-                    bgcolor: "rgba(47, 181, 108, 0.04)",
-                    transform: "translateY(-2px)",
-                  },
-                }}
-              >
-                Quay lại
-              </Button>
-            </Stack>
-          </CardContent>
-        </Card>
-      </Grid>
-
-      {/* Right section - Current rental and history */}
-      <Grid item xs={12} md={7}>
-        {/* Current rental info */}
-        <Paper
-          sx={{
-            p: 3,
-            mb: 3,
-            borderRadius: 3,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-            },
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                bgcolor: "#f6faf7",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "transform 0.2s ease",
-                "&:hover": {
-                  transform: "scale(1.1) rotate(5deg)",
-                },
-              }}
-            >
-              <BoltIcon sx={{ color: "#2fb56c" }} />
-            </Box>
-            <Typography variant="h6" fontWeight={600}>
-              Thông tin thuê hiện tại
-            </Typography>
-          </Stack>
-
-          <Box
-            sx={{
-              position: "relative",
-              p: 3,
-              bgcolor: "#f6faf7",
-              borderRadius: 2,
-              transition: "transform 0.2s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            <Chip
-              label={currentRental.status}
-              sx={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                bgcolor: "rgba(47, 181, 108, 0.95)",
-                backdropFilter: "blur(4px)",
-                color: "white",
-                fontWeight: 600,
-                px: 1.5,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                "& .MuiChip-label": {
-                  px: 0.5,
-                },
-              }}
-            />
-
-            <Grid container spacing={3}>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Khách hàng
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.customer}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Mã hợp đồng
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.contractId}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Thời gian bắt đầu
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.startDate}
-                </Typography>
-              </Grid>
-
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Dự kiến trả xe
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.endDate}
-                </Typography>
-              </Grid>
-            </Grid>
-          </Box>
-        </Paper>
-
-        {/* Rental history */}
-        <Paper
-          sx={{
-            p: 3,
-            borderRadius: 3,
-            boxShadow: "0 2px 12px rgba(0,0,0,0.08)",
-            transition: "all 0.2s ease-in-out",
-            "&:hover": {
-              boxShadow: "0 4px 20px rgba(0,0,0,0.12)",
-            },
-          }}
-        >
-          <Stack direction="row" alignItems="center" spacing={2} mb={3}>
-            <Box
-              sx={{
-                width: 40,
-                height: 40,
-                borderRadius: "50%",
-                bgcolor: "#f6faf7",
-                display: "flex",
-                alignItems: "center",
-                justifyContent: "center",
-                transition: "transform 0.2s ease",
-                "&:hover": {
-                  transform: "scale(1.1) rotate(-5deg)",
-                },
-              }}
-            >
-              <DirectionsCarIcon sx={{ color: "#2fb56c" }} />
-            </Box>
-            <Typography variant="h6" fontWeight={600}>
-              Lịch sử giao dịch
-            </Typography>
-          </Stack>
-
-          <Stack
-            spacing={2}
-            sx={{
-              "& > *": {
-                transition: "transform 0.2s ease",
-                "&:hover": {
-                  transform: "translateX(4px)",
-                },
-              },
-            }}
-          >
-            {rentalHistory.map((rental, index) => (
-              <React.Fragment key={rental.id}>
-                {index > 0 && <Divider />}
-                <Box sx={{ py: 1 }}>
-                  <Stack
-                    direction="row"
-                    alignItems="center"
-                    justifyContent="space-between"
-                    mb={1}
-                  >
-                    <Typography variant="subtitle2" fontWeight={600}>
-                      {rental.period}
-                    </Typography>
-                    <Chip
-                      label={rental.status}
-                      size="small"
-                      sx={{
-                        bgcolor: "#f6faf7",
-                        color: "#2fb56c",
-                        fontWeight: 600,
-                      }}
-                    />
-                  </Stack>
-
-                  <Typography variant="body2" color="text.secondary">
-                    Khách hàng: {rental.customer}
-                  </Typography>
-
-                  <Stack
-                    direction="row"
-                    spacing={1}
-                    alignItems="center"
-                    mt={0.5}
-                    color="text.secondary"
-                  >
-                    <Typography variant="body2">{rental.duration}</Typography>
-                    <Box
-                      component="span"
-                      sx={{
-                        width: 4,
-                        height: 4,
-                        borderRadius: "50%",
-                        bgcolor: "currentColor",
-                      }}
-                    />
-                    <Typography variant="body2">{rental.distance}</Typography>
-                    {rental.location && (
-                      <>
-                        <Box
-                          component="span"
-                          sx={{
-                            width: 4,
-                            height: 4,
-                            borderRadius: "50%",
-                            bgcolor: "currentColor",
-                          }}
-                        />
-                        <Typography variant="body2">
-                          {rental.location}
-                        </Typography>
-                      </>
-                    )}
-                  </Stack>
+                  <Typography variant="h6" fontWeight={700} mb={2}>Thông tin giao xe</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <TextField fullWidth label="ODO trước giao (km)" defaultValue={vehicle.odo} />
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <TextField fullWidth label="Mức pin hiện tại (%)" defaultValue={vehicle.battery} />
+                    </Grid>
+                    <Grid item xs={12}>
+                      <TextField fullWidth multiline rows={3} label="Ghi chú tình trạng xe" placeholder="Ví dụ: xe sạch, xăng đầy..." />
+                    </Grid>
+                  </Grid>
                 </Box>
-              </React.Fragment>
-            ))}
-          </Stack>
-        </Paper>
-      </Grid>
-    </Grid>
-  );
+
+                <Box>
+                  <Typography variant="h6" fontWeight={700} mb={2}>Chụp ảnh xe (6 vị trí bắt buộc)</Typography>
+                  <Grid container spacing={2}>
+                    {Array.from({ length: 6 }).map((_, i) => (
+                      <Grid item xs={12} sm={6} md={4} key={i}>
+                        <Paper
+                          sx={{
+                            height: 130,
+                            borderRadius: 2,
+                            border: images[i] ? '1px solid rgba(47,181,108,0.18)' : '1px dashed #e6eee8',
+                            display: 'flex',
+                            alignItems: 'center',
+                            justifyContent: 'center',
+                            position: 'relative',
+                            overflow: 'hidden',
+                            bgcolor: images[i] ? '#f7fff8' : 'transparent'
+                          }}
+                        >
+                          {images[i] ? (
+                            <>
+                              <Box component="img" src={previews[i]} alt={`slot-${i}`} sx={{ width: '100%', height: '100%', objectFit: 'cover' }} />
+                              <IconButton
+                                size="small"
+                                onClick={() => removeImage(i)}
+                                sx={{ position: 'absolute', top: 8, right: 8, bgcolor: 'rgba(0,0,0,0.4)', color: '#fff' }}
+                              >
+                                <CloseIcon fontSize="small" />
+                              </IconButton>
+                              <CheckCircleIcon sx={{ position: 'absolute', bottom: 8, left: 8, color: '#2fb56c' }} />
+                            </>
+                          ) : (
+                            <label style={{ width: '100%', height: '100%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}>
+                              <input
+                                type="file"
+                                accept="image/*"
+                                style={{ display: 'none' }}
+                                onChange={(e) => handleFileChange(i, e)}
+                              />
+                              <Stack alignItems="center" spacing={1}>
+                                <PhotoCameraIcon color="action" />
+                                <Typography variant="caption" color="text.secondary">Thêm ảnh</Typography>
+                              </Stack>
+                            </label>
+                          )}
+                        </Paper>
+                      </Grid>
+                    ))}
+                  </Grid>
+                  <Typography variant="caption" color="text.secondary" mt={1} display="block">Yêu cầu: 6 ảnh, kích thước tối đa mỗi ảnh 5MB.</Typography>
+                </Box>
+
+                <Box>
+                  <Typography variant="h6" fontWeight={700} mb={2}>Chờ ký xác nhận</Typography>
+                  <Grid container spacing={2}>
+                    <Grid item xs={12} md={6}>
+                      <Paper sx={{ minHeight: 120, borderRadius: 2, p: 2 }}>Chữ ký người thuê</Paper>
+                    </Grid>
+                    <Grid item xs={12} md={6}>
+                      <Paper sx={{ minHeight: 120, borderRadius: 2, p: 2 }}>Chữ ký nhân viên</Paper>
+                    </Grid>
+                  </Grid>
+                </Box>
+
+                <Divider />
+
+                <Stack direction="row" spacing={2} justifyContent="flex-end">
+                  <Button variant="outlined" onClick={() => navigate(-1)} disabled={submitting}>Hủy bỏ</Button>
+                  <Button
+                    variant="contained"
+                    sx={{ bgcolor: '#2fb56c' }}
+                    onClick={handleSubmit}
+                    disabled={submitting}
+                    startIcon={submitting ? <CircularProgress color="inherit" size={16} /> : null}
+                  >
+                    {submitting ? 'Đang xử lý...' : 'Xác nhận xe sẵn sàng cho thuê'}
+                  </Button>
+                </Stack>
+                <Snackbar open={snack.open} autoHideDuration={4000} onClose={() => setSnack((s)=>({...s, open:false}))} anchorOrigin={{ vertical: 'bottom', horizontal: 'center' }}>
+                  <MuiAlert elevation={6} variant="filled" onClose={() => setSnack((s)=>({...s, open:false}))} severity={snack.severity}>
+                    {snack.msg}
+                  </MuiAlert>
+                </Snackbar>
+              </Stack>
+            </Paper>
+          </Grid>
+        </Grid>
+    );
 }

@@ -210,6 +210,11 @@ export default function VehicleCard({
                 variant="contained"
                 color="primary"
                 sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+                onClick={() => {
+                  navigate(`/check-in/return/${encodeURIComponent(license)}`, {
+                    state: { name, license, battery, mileage, status, image, customer }
+                  });
+                }}
               >
                 Nhận xe
               </Button>
@@ -222,7 +227,7 @@ export default function VehicleCard({
                     return;
                   }
                   // fallback navigate
-                  navigate(`/dashboard/checkout/${encodeURIComponent(license)}`, { 
+                  navigate(`/dashboard/check-in/${encodeURIComponent(license)}`, { 
                     state: { name, license, battery, mileage, status, image, customer } 
                   });
                 }}
@@ -237,6 +242,19 @@ export default function VehicleCard({
                 variant="contained"
                 color="success"
                 sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+                onClick={() => {
+                  if (status === 'Đã đặt trước') {
+                    // navigate to delivery/prepare page
+                    navigate(`/check-out/${encodeURIComponent(license)}`, { state: { name, license, battery, mileage, status, image, customer } });
+                    return;
+                  }
+                  // fallback: view checkout/detail
+                  if (onViewDetail) {
+                    onViewDetail({ name, license, battery, mileage, status, image, customer });
+                    return;
+                  }
+                  navigate(`/dashboard/check-in/${encodeURIComponent(license)}`, { state: { name, license, battery, mileage, status, image, customer } });
+                }}
               >
                 {status === "Đã đặt trước" ? "Giao xe" : "Xem chi tiết"}
               </Button>

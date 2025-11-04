@@ -5,11 +5,15 @@ import {
 } from "react-router-dom";
 import MainLayout from "./components/layouts/MainLayout";
 import LoginPage from "./pages/auth/LoginPage";
-import DashboardLayout from "./pages/dashboard/DashboardLayout";
+import DashboardLayout from "./components/layouts/DashboardLayout";
 import DashboardList from "./pages/dashboard/DashboardList";
 import { useUserStore } from "./stores/userStore";
 import ProfilePage from "./pages/ProfilePage";
 import CheckoutPage from "./pages/CheckoutPage";
+import ReturnInspectionPage from "./pages/ReturnInspectionPage";
+import CheckinPage from "./pages/CheckInPage";
+import CheckingLayout from "./components/layouts/CheckingLayout";
+import ErrorPage from "./pages/ErrorPage";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useUserStore();
@@ -42,9 +46,9 @@ const router = createBrowserRouter([
             element: <DashboardList />,
           },
           {
-            path: "checkout/:vehicleId",
-            element: <CheckoutPage />,
-          }
+            path: "check-in/:vehicleId",
+            element: <CheckinPage />,
+          },
         ],
       },
       {
@@ -58,8 +62,36 @@ const router = createBrowserRouter([
     ],
   },
   {
+    path: "/check-in",
+    element: <CheckingLayout />,
+    children: [
+      {
+        path: "return/:vehicleId",
+        element: <ReturnInspectionPage />,
+      }
+    ]
+  },
+  {
+    path: "/check-out",
+    element: (
+      <ProtectedRoute>
+        <CheckingLayout />
+      </ProtectedRoute>
+    ),
+    children: [
+      {
+        path: ":vehicleId",
+        element: <CheckoutPage />,
+      },
+    ],
+  },
+  {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "*",
+    element: <ErrorPage />,
   },
 ]);
 
