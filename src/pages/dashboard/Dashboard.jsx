@@ -74,13 +74,13 @@ export default function Dashboard() {
   const location = useLocation();
 
   // If current path is a child route (checkout), render the nested route via Outlet
-  if (location.pathname.startsWith('/dashboard/checkout')) {
+  if (location.pathname.startsWith('/dashboard/check-in')) {
     return <Outlet />;
   }
 
   const handleViewDetail = (vehicle) => {
     // For ready vehicles, navigate to checkout page; adjust route as needed
-    navigate(`/dashboard/checkout/${encodeURIComponent(vehicle.license)}`, { state: { vehicle } });
+    navigate(`/dashboard/check-in/${encodeURIComponent(vehicle.license)}`, { state: { vehicle } });
   };
   return (
     <Box
