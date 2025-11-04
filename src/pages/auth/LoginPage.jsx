@@ -20,17 +20,29 @@ import EmailIcon from "@mui/icons-material/Email";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
+import { useUserStore } from "../../stores/userStore";
+import { Navigate } from "react-router-dom";
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState("");
   const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
+  const login = useUserStore((state) => state.login);
+  const token = useUserStore((state) => state.token);
 
   const handleSubmit = (e) => {
     e.preventDefault();
     // Replace with real auth logic
+    const userData = { email, password };
+    const token = "abc123token"
+    login(userData, token);
+    localStorage.setItem("token", token);
     console.log("submit", { email, password });
   };
+
+  if (token) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <Box

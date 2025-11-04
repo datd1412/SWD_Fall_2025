@@ -7,7 +7,7 @@ const drawerWidth = 260;
 
 export default function MainLayout() {
   return (
-    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: '#f6faf7' }}>
+    <Box sx={{ display: "flex", minHeight: "100vh", bgcolor: "#f6faf7" }}>
       <CssBaseline />
       <Header drawerWidth={drawerWidth} />
       <Sidebar drawerWidth={drawerWidth} />
@@ -16,12 +16,12 @@ export default function MainLayout() {
         sx={{
           flexGrow: 1,
           p: { xs: 2, md: 4 },
-          bgcolor: '#f6faf7',
+          bgcolor: "#f6faf7",
           mt: 10,
-          minHeight: '100vh',
+          minHeight: "100vh",
         }}
       >
-          <Outlet />
+        <Outlet />
       </Box>
     </Box>
   );

@@ -9,7 +9,7 @@ import {
   Stack,
 } from "@mui/material";
 import VehicleCard from "../../components/VehicleCard";
-import { useNavigate, useLocation, Outlet } from 'react-router-dom';
+import { useNavigate } from 'react-router-dom';
 
 const stats = [
   { title: "Xe sẵn sàng", value: 3 },
@@ -69,27 +69,15 @@ const vehicles = [
   },
 ];
 
-export default function Dashboard() {
+export default function DashboardList() {
   const navigate = useNavigate();
-  const location = useLocation();
-
-  // If current path is a child route (checkout), render the nested route via Outlet
-  if (location.pathname.startsWith('/dashboard/checkout')) {
-    return <Outlet />;
-  }
 
   const handleViewDetail = (vehicle) => {
-    // For ready vehicles, navigate to checkout page; adjust route as needed
     navigate(`/dashboard/checkout/${encodeURIComponent(vehicle.license)}`, { state: { vehicle } });
   };
-  return (
-    <Box
-      sx={{
-        backgroundColor: "#f9fbf9",
-        minHeight: "100vh",
-      }}
-    >
 
+  return (
+    <Box>
       {/* Stats */}
       <Grid container spacing={2} mb={3}>
         {stats.map((s) => (
@@ -116,12 +104,12 @@ export default function Dashboard() {
 
       {/* Bộ lọc */}
       <Stack direction="row" spacing={1.5} mb={3}>
-        <Button variant="contained" color="success">
+        <Button variant="outlined" color="success">
           Tất cả xe
         </Button>
         <Button variant="outlined">Xe sẵn sàng</Button>
         <Button variant="outlined">Đã đặt trước</Button>
-        <Button variant="outlined">Đang cho thuê</Button>
+        <Button variant="contained" color="success">Đang cho thuê</Button>
       </Stack>
 
       {/* Danh sách xe */}
