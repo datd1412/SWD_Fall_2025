@@ -19,11 +19,15 @@ import HistoryIcon from "@mui/icons-material/History";
 import LogoutIcon from "@mui/icons-material/Logout";
 import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
 import { useUserStore } from "../../stores/userStore";
-import { useNavigate, useLocation } from 'react-router-dom';
+import { useNavigate, useLocation } from "react-router-dom";
 
 const menuItems = [
   { text: "Dashboard", icon: <HomeIcon />, path: "/dashboard" },
-  { text: "Lịch sử giao nhận", icon: <HistoryIcon />, path: "/history" },
+  {
+    text: "Lịch sử giao nhận",
+    icon: <HistoryIcon />,
+    path: "/dashboard/history",
+  },
   { text: "Hợp đồng", icon: <ReceiptIcon />, path: "/contracts" },
   { text: "Khách hàng", icon: <PeopleAltIcon />, path: "/customers" },
 ];
@@ -112,7 +116,8 @@ export default function Sidebar({ drawerWidth = 260 }) {
         {/* Navigation */}
         <List sx={{ px: 1 }}>
           {menuItems.map((item) => {
-            const isSelected = location.pathname === item.path || (item.path !== '/' && location.pathname.startsWith(item.path));
+            // Exact match or match with sub-routes, but prioritize exact matches
+            const isSelected = location.pathname === item.path;
             return (
               <ListItemButton
                 key={item.text}
@@ -132,8 +137,13 @@ export default function Sidebar({ drawerWidth = 260 }) {
                 selected={isSelected}
                 onClick={() => navigate(item.path)}
               >
-                <ListItemIcon sx={{ color: 'inherit', minWidth: 36 }}>{item.icon}</ListItemIcon>
-                <ListItemText primary={item.text} primaryTypographyProps={{ fontSize: 15, fontWeight: 500 }} />
+                <ListItemIcon sx={{ color: "inherit", minWidth: 36 }}>
+                  {item.icon}
+                </ListItemIcon>
+                <ListItemText
+                  primary={item.text}
+                  primaryTypographyProps={{ fontSize: 15, fontWeight: 500 }}
+                />
               </ListItemButton>
             );
           })}
