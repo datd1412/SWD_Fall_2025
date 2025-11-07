@@ -67,6 +67,7 @@ export default function Header({ drawerWidth = 260 }) {
     dashboard: "Dashboard",
     checkout: "Chi tiết xe",
     profile: "Hồ sơ",
+    history: "Lịch sử giao nhận",
   };
 
   const crumbs = [];

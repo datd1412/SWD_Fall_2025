@@ -14,6 +14,7 @@ import ReturnInspectionPage from "./pages/ReturnInspectionPage";
 import CheckinPage from "./pages/CheckInPage";
 import CheckingLayout from "./components/layouts/CheckingLayout";
 import ErrorPage from "./pages/ErrorPage";
+import HistoryPage from "./pages/HistoryPage";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useUserStore();
@@ -48,6 +49,10 @@ const router = createBrowserRouter([
           {
             path: "check-in/:vehicleId",
             element: <CheckinPage />,
+          },
+          {
+            path: "history",
+            element: <HistoryPage />,
           },
         ],
       },
