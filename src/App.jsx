@@ -15,6 +15,8 @@ import CheckinPage from "./pages/CheckInPage";
 import CheckingLayout from "./components/layouts/CheckingLayout";
 import ErrorPage from "./pages/ErrorPage";
 import HistoryPage from "./pages/HistoryPage";
+import VehicleDetailPage from "./pages/VehicleDetailPage";
+import ToastProvider from "./components/providers/ToastProvider";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useUserStore();
@@ -51,6 +53,10 @@ const router = createBrowserRouter([
             element: <CheckinPage />,
           },
           {
+            path: "vehicle-detail/:vehicleId",
+            element: <VehicleDetailPage />,
+          },
+          {
             path: "history",
             element: <HistoryPage />,
           },
@@ -73,8 +79,8 @@ const router = createBrowserRouter([
       {
         path: "return/:vehicleId",
         element: <ReturnInspectionPage />,
-      }
-    ]
+      },
+    ],
   },
   {
     path: "/check-out",
@@ -102,9 +108,9 @@ const router = createBrowserRouter([
 
 function App() {
   return (
-    <>
+    <ToastProvider>
       <RouterProvider router={router} />
-    </>
+    </ToastProvider>
   );
 }
 
