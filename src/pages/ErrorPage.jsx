@@ -9,7 +9,7 @@ export default function ErrorPage() {
   const navigate = useNavigate();
 
   return (
-    <Box sx={{ minHeight: '80vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f5f7f6', p: 3 }}>
+    <Box sx={{ height: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', bgcolor: '#f5f7f6', p: 3 }}>
       <Box sx={{ textAlign: 'center', bgcolor: 'white', p: { xs: 4, md: 6 }, borderRadius: 3, boxShadow: 3, maxWidth: 760, width: '100%' }}>
         <Stack spacing={2} alignItems="center">
           <Box sx={{ width: 120, height: 120, borderRadius: '50%', bgcolor: '#e8f5e9', display: 'flex', alignItems: 'center', justifyContent: 'center' }}>

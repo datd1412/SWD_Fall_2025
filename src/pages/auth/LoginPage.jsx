@@ -22,6 +22,8 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useUserStore } from "../../stores/userStore";
 import { Navigate } from "react-router-dom";
+import authService from "../../../services/authService";
+import { dismissToast, showError, showLoading, showSuccess } from "../../utils/toast";
 
 export default function LoginPage() {
   const [email, setEmail] = React.useState("");
@@ -30,14 +32,20 @@ export default function LoginPage() {
   const login = useUserStore((state) => state.login);
   const token = useUserStore((state) => state.token);
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    // Replace with real auth logic
-    const userData = { email, password };
-    const token = "abc123token"
-    login(userData, token);
-    localStorage.setItem("token", token);
-    console.log("submit", { email, password });
+    try {
+      const userData = { email, password };
+      const toastId = showLoading("Đang đăng nhập...");
+      const response = await authService.login(email, password);
+      dismissToast(toastId);
+      if (response) {
+        login(userData, response.token);
+      }
+      showSuccess("Đăng nhập thành công");
+    } catch (error) {
+      showError(error.errors?.Email || "Đăng nhập thất bại");
+    }
   };
 
   if (token) {
@@ -208,7 +216,12 @@ export default function LoginPage() {
                     control={<Checkbox />}
                     label="Ghi nhớ đăng nhập"
                   />
-                  <Link href="#" underline="none" variant="body2" color="success">
+                  <Link
+                    href="#"
+                    underline="none"
+                    variant="body2"
+                    color="success"
+                  >
                     Quên mật khẩu?
                   </Link>
                 </Box>
