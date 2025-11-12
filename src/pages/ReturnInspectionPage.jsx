@@ -8,15 +8,11 @@ import {
   FormControl,
   CircularProgress,
   TextField,
-  Grid,
-  Card,
-  CardContent,
   Alert,
   Divider,
 } from "@mui/material";
 import { useState } from "react";
 import { useLocation, useNavigate } from "react-router-dom";
-import KeyboardBackspaceIcon from "@mui/icons-material/KeyboardBackspace";
 import ImageIcon from "@mui/icons-material/Image";
 import CheckCircleIcon from "@mui/icons-material/CheckCircle";
 

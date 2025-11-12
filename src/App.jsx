@@ -15,6 +15,7 @@ import CheckinPage from "./pages/CheckInPage";
 import CheckingLayout from "./components/layouts/CheckingLayout";
 import ErrorPage from "./pages/ErrorPage";
 import HistoryPage from "./pages/HistoryPage";
+import VehicleDetailPage from "./pages/VehicleDetailPage";
 import ToastProvider from "./components/providers/ToastProvider";
 
 const ProtectedRoute = ({ children }) => {
@@ -50,6 +51,10 @@ const router = createBrowserRouter([
           {
             path: "check-in/:vehicleId",
             element: <CheckinPage />,
+          },
+          {
+            path: "vehicle-detail/:vehicleId",
+            element: <VehicleDetailPage />,
           },
           {
             path: "history",

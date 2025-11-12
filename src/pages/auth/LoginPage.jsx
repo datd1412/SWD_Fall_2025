@@ -35,12 +35,12 @@ export default function LoginPage() {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      const userData = { email, password };
       const toastId = showLoading("Đang đăng nhập...");
       const response = await authService.login(email, password);
       dismissToast(toastId);
+      console.log("Login response:", response);
       if (response) {
-        login(userData, response.token);
+        login(response, response.token);
       }
       showSuccess("Đăng nhập thành công");
     } catch (error) {

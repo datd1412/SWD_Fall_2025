@@ -248,6 +248,11 @@ export default function VehicleCard({
                     navigate(`/check-out/${encodeURIComponent(license)}`, { state: { name, license, battery, mileage, status, image, customer } });
                     return;
                   }
+                  // for available vehicles, navigate to vehicle detail page
+                  if (status === 'Sẵn sàng') {
+                    navigate(`/dashboard/vehicle-detail/${encodeURIComponent(license)}`, { state: { name, license, battery, mileage, status, image, customer } });
+                    return;
+                  }
                   // fallback: view checkout/detail
                   if (onViewDetail) {
                     onViewDetail({ name, license, battery, mileage, status, image, customer });

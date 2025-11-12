@@ -62,7 +62,7 @@ const rentalHistory = [
   },
 ];
 
-export default function CheckinPage() {
+export default function VehicleDetailPage() {
   const navigate = useNavigate();
   const location = useLocation();
   const vehicle = location.state?.vehicle || {
@@ -71,8 +71,11 @@ export default function CheckinPage() {
     type: "EV_Car",
     battery: 72,
     odo: 15600,
-    imageUrl: "https://example.com/tesla-model-3.jpg", // Replace with actual image URL
+    imageUrl: "https://images2.thanhnien.vn/528068263637045248/2023/9/2/tesla-model-3-2024-18-a708-16936389423651348740155.jpg", // Replace with actual image URL
+    status: "Sẵn sàng", // Assume available by default
   };
+
+  const isAvailable = vehicle.status === "Sẵn sàng";
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 0 } }}>
@@ -111,13 +114,13 @@ export default function CheckinPage() {
                 {!vehicle.imageUrl && "🚗"}
               </Box>
               <Chip
-                label="Đang cho thuê"
-                color="success"
+                label={vehicle.status}
+                color={vehicle.status === "Sẵn sàng" ? "success" : "warning"}
                 sx={{
                   position: "absolute",
                   top: 16,
                   left: 16,
-                  bgcolor: "rgba(47, 181, 108, 0.95)",
+                  bgcolor: vehicle.status === "Sẵn sàng" ? "rgba(47, 181, 108, 0.95)" : "rgba(255, 152, 0, 0.95)",
                   backdropFilter: "blur(4px)",
                   color: "white",
                   fontWeight: 600,
@@ -194,28 +197,33 @@ export default function CheckinPage() {
                 variant="contained"
                 fullWidth
                 sx={{
-                  bgcolor: "#2fb56c",
+                  bgcolor: isAvailable ? "#2fb56c" : "#ff9800",
                   height: 48,
                   borderRadius: 2,
                   textTransform: "none",
                   fontWeight: 600,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    bgcolor: "#2aa561",
+                    bgcolor: isAvailable ? "#2aa561" : "#e68900",
                     transform: "translateY(-2px)",
-                    boxShadow: "0 4px 12px rgba(47, 181, 108, 0.4)",
+                    boxShadow: isAvailable ? "0 4px 12px rgba(47, 181, 108, 0.4)" : "0 4px 12px rgba(255, 152, 0, 0.4)",
                   },
                 }}
-                onClick={() => {
-                  navigate(
-                    `/check-in/return/${encodeURIComponent(
-                      vehicle.licensePlate
-                    )}`,
-                    { state: { vehicle } }
-                  );
-                }}
+                // onClick={() => {
+                //   if (isAvailable) {
+                //     navigate(
+                //       `/check-out/${encodeURIComponent(vehicle.licensePlate)}`,
+                //       { state: { vehicle } }
+                //     );
+                //   } else {
+                //     navigate(
+                //       `/check-in/return/${encodeURIComponent(vehicle.licensePlate)}`,
+                //       { state: { vehicle } }
+                //     );
+                //   }
+                // }}
               >
-                Nhận xe
+                {isAvailable ? "Đặt xe" : "Nhận xe"}
               </Button>
               <Button
                 variant="outlined"
@@ -224,17 +232,17 @@ export default function CheckinPage() {
                 sx={{
                   height: 48,
                   borderRadius: 2,
-                  borderColor: "#2fb56c",
+                  borderColor: isAvailable ? "#2fb56c" : "#ff9800",
                   borderWidth: 1.5,
-                  color: "#2fb56c",
+                  color: isAvailable ? "#2fb56c" : "#ff9800",
                   textTransform: "none",
                   fontWeight: 600,
                   transition: "all 0.2s ease-in-out",
                   "&:hover": {
-                    borderColor: "#2aa561",
+                    borderColor: isAvailable ? "#2aa561" : "#e68900",
                     borderWidth: 1.5,
-                    color: "#2aa561",
-                    bgcolor: "rgba(47, 181, 108, 0.04)",
+                    color: isAvailable ? "#2aa561" : "#e68900",
+                    bgcolor: isAvailable ? "rgba(47, 181, 108, 0.04)" : "rgba(255, 152, 0, 0.04)",
                     transform: "translateY(-2px)",
                   },
                 }}
@@ -284,74 +292,94 @@ export default function CheckinPage() {
             </Typography>
           </Stack>
 
-          <Box
-            sx={{
-              position: "relative",
-              p: 3,
-              bgcolor: "#f6faf7",
-              borderRadius: 2,
-              transition: "transform 0.2s ease",
-              "&:hover": {
-                transform: "translateY(-2px)",
-              },
-            }}
-          >
-            <Chip
-              label={currentRental.status}
+          {isAvailable ? (
+            <Box
               sx={{
-                position: "absolute",
-                top: 16,
-                right: 16,
-                bgcolor: "rgba(47, 181, 108, 0.95)",
-                backdropFilter: "blur(4px)",
-                color: "white",
-                fontWeight: 600,
-                px: 1.5,
-                boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
-                "& .MuiChip-label": {
-                  px: 0.5,
+                position: "relative",
+                p: 3,
+                bgcolor: "#f9f9f9",
+                borderRadius: 2,
+                transition: "transform 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
+                },
+                textAlign: "center",
+              }}
+            >
+              <Typography variant="body1" color="text.secondary">
+                Xe hiện tại chưa được thuê. Sẵn sàng cho thuê mới.
+              </Typography>
+            </Box>
+          ) : (
+            <Box
+              sx={{
+                position: "relative",
+                p: 3,
+                bgcolor: "#f6faf7",
+                borderRadius: 2,
+                transition: "transform 0.2s ease",
+                "&:hover": {
+                  transform: "translateY(-2px)",
                 },
               }}
-            />
+            >
+              <Chip
+                label={currentRental.status}
+                sx={{
+                  position: "absolute",
+                  top: 16,
+                  right: 16,
+                  bgcolor: "rgba(47, 181, 108, 0.95)",
+                  backdropFilter: "blur(4px)",
+                  color: "white",
+                  fontWeight: 600,
+                  px: 1.5,
+                  boxShadow: "0 2px 8px rgba(0,0,0,0.15)",
+                  "& .MuiChip-label": {
+                    px: 0.5,
+                  },
+                }}
+              />
 
-            <Grid container spacing={3}>
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Khách hàng
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.customer}
-                </Typography>
-              </Grid>
+              <Grid container spacing={3}>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Khách hàng
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600} mt={0.5}>
+                    {currentRental.customer}
+                  </Typography>
+                </Grid>
 
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Mã hợp đồng
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.contractId}
-                </Typography>
-              </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Mã hợp đồng
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600} mt={0.5}>
+                    {currentRental.contractId}
+                  </Typography>
+                </Grid>
 
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Thời gian bắt đầu
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.startDate}
-                </Typography>
-              </Grid>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Thời gian bắt đầu
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600} mt={0.5}>
+                    {currentRental.startDate}
+                  </Typography>
+                </Grid>
 
-              <Grid item xs={6}>
-                <Typography variant="body2" color="text.secondary">
-                  Dự kiến trả xe
-                </Typography>
-                <Typography variant="body1" fontWeight={600} mt={0.5}>
-                  {currentRental.endDate}
-                </Typography>
+                <Grid item xs={6}>
+                  <Typography variant="body2" color="text.secondary">
+                    Dự kiến trả xe
+                  </Typography>
+                  <Typography variant="body1" fontWeight={600} mt={0.5}>
+                    {currentRental.endDate}
+                  </Typography>
+                </Grid>
               </Grid>
-            </Grid>
-          </Box>
+            </Box>
+          )}
         </Paper>
 
         {/* Rental history */}
