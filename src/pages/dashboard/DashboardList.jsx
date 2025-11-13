@@ -13,64 +13,6 @@ import VehicleCard from "../../components/VehicleCard";
 import { useNavigate } from "react-router-dom";
 import vehicleService from "../../../services/vehicleService";
 
-// const stats = [
-//   { title: "Xe sẵn sàng", value: 3 },
-//   { title: "Đã đặt trước", value: 2 },
-//   { title: "Đang cho thuê", value: 1 },
-//   { title: "Tổng số xe", value: 6 },
-// ];
-
-// const vehicles = [
-//   {
-//     name: "Honda City RS",
-//     license: "59T2-87343",
-//     status: "Sẵn sàng",
-//     battery: 95,
-//     distance: 12500,
-//   },
-//   {
-//     name: "VinFast VF e34",
-//     license: "51F-12345",
-//     status: "Đã đặt trước",
-//     battery: 88,
-//     distance: 8200,
-//     customer: "Nguyễn Văn B",
-//     time: "2025-01-16 09:00",
-//   },
-//   {
-//     name: "Tesla Model 3",
-//     license: "30A-99999",
-//     status: "Đang thuê",
-//     battery: 72,
-//     distance: 15600,
-//     customer: "Trần Thị C",
-//     time: "2025-01-15 08:00",
-//   },
-//   {
-//     name: "Hyundai Kona",
-//     license: "92B-55555",
-//     status: "Sẵn sàng",
-//     battery: 100,
-//     distance: 5400,
-//   },
-//   {
-//     name: "Nissan Leaf",
-//     license: "43C-77777",
-//     status: "Đã đặt trước",
-//     battery: 65,
-//     distance: 22100,
-//     customer: "Lê Văn D",
-//     time: "2025-01-16 14:00",
-//   },
-//   {
-//     name: "BYD Atto 3",
-//     license: "79D-88888",
-//     status: "Sẵn sàng",
-//     battery: 80,
-//     distance: 9800,
-//   },
-// ];
-
 export default function DashboardList() {
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = React.useState("all");
@@ -94,22 +36,22 @@ export default function DashboardList() {
     fetchVehicles();
   }, []);
 
-  const handleViewDetail = (vehicle) => {
-    navigate(`/dashboard/check-in/${encodeURIComponent(vehicle.license)}`, {
-      state: { vehicle },
-    });
-  };
+  // const handleViewDetail = (vehicle) => {
+  //   navigate(`/dashboard/check-in/${encodeURIComponent(vehicle.licensePlate)}`, {
+  //     state: { vehicle },
+  //   });
+  // };
 
   const filteredVehicles = React.useMemo(() => {
     if (selectedStatus === "all") return vehicles;
     return vehicles.filter((v) => {
       switch (selectedStatus) {
         case "ready":
-          return v.status === "Sẵn sàng";
+          return v.status === "Available";
         case "booked":
-          return v.status === "Đã đặt trước";
+          return v.status === "Booked";
         case "rented":
-          return v.status === "Đang thuê";
+          return v.status === "InUse";
         default:
           return true;
       }
@@ -117,13 +59,15 @@ export default function DashboardList() {
   }, [selectedStatus, vehicles]);
 
   const stats = React.useMemo(() => {
-    const ready = vehicles.filter((v) => v.status === "Sẵn sàng").length;
-    const booked = vehicles.filter((v) => v.status === "Đã đặt trước").length;
-    const rented = vehicles.filter((v) => v.status === "Đang thuê").length;
+    const ready = vehicles.filter((v) => v.status === "Available").length;
+    const booked = vehicles.filter((v) => v.status === "Booked").length;
+    const rented = vehicles.filter((v) => v.status === "InUse").length;
+    const maintenance = vehicles.filter((v) => v.status === "Damaged" || v.status === "Maintenance").length;
     return [
       { title: "Xe sẵn sàng", value: ready },
       { title: "Đã đặt trước", value: booked },
       { title: "Đang cho thuê", value: rented },
+      { title: "Đang bảo trì", value: maintenance },
       { title: "Tổng số xe", value: vehicles.length },
     ];
   }, [vehicles]);
@@ -196,8 +140,8 @@ export default function DashboardList() {
       ) : (
         <Grid container spacing={2}>
           {filteredVehicles.map((v) => (
-            <Grid item xs={12} sm={6} md={4} key={v.license}>
-              <VehicleCard {...v} onViewDetail={handleViewDetail} />
+            <Grid item xs={12} sm={6} md={4} key={v.id}>
+              <VehicleCard {...v} />
             </Grid>
           ))}
         </Grid>

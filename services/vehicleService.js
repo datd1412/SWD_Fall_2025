@@ -8,7 +8,7 @@ const vehicleService = {
   getAllVehicles: async () => {
     try {
       if (!stationId) throw new Error("Missing stationId in user");
-      const response = await api.get(`/Vehicles/available`, {
+      const response = await api.get(`/Vehicles`, {
         params: { stationId },
       });
       return response;

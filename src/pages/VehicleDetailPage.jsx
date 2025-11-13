@@ -23,8 +23,7 @@ export default function VehicleDetailPage() {
   const location = useLocation();
   const { vehicleId } = useParams();
 
-  // Nhận data truyền từ VehicleCard hoặc null (nếu reload)
-  const [vehicle, setVehicle] = useState(location.state || null);
+  const [vehicle, setVehicle] = useState(location.state?.vehicle || null);
   const [loading, setLoading] = useState(!location.state);
   const [error, setError] = useState(null);
 
@@ -55,7 +54,41 @@ export default function VehicleDetailPage() {
   if (error) return <Typography color="error">{error}</Typography>;
   if (!vehicle) return <Typography>Không có dữ liệu xe.</Typography>;
 
-  // Dữ liệu mô phỏng (giữ nguyên UI)
+  const statusMap = {
+    Available: {
+      label: "Sẵn sàng",
+      color: "#2fb56c",
+      buttonText: "Đặt xe",
+    },
+    Booked: {
+      label: "Đã đặt trước",
+      color: "#2196f3",
+      buttonText: "Giao xe",
+    },
+    InUse: {
+      label: "Đang thuê",
+      color: "#ff9800",
+      buttonText: "Nhận xe",
+    },
+    Maintenance: {
+      label: "Bảo trì",
+      color: "#f44336",
+      buttonText: "Đang bảo trì",
+    },
+    Damaged: {
+      label: "Hư hỏng",
+      color: "#9e9e9e",
+      buttonText: "Xe hư hỏng",
+    },
+  };
+
+  const statusInfo =
+    statusMap[vehicle.status] || {
+      label: "Không rõ",
+      color: "#9e9e9e",
+      buttonText: "Xem chi tiết",
+    };
+
   const currentRental = vehicle.currentRental || {
     status: "ĐANG HOẠT ĐỘNG",
     customer: "Trần Thị C",
@@ -84,7 +117,8 @@ export default function VehicleDetailPage() {
     },
   ];
 
-  const isAvailable = vehicle.status === "Sẵn sàng" || vehicle.status === "Available";
+  // ✅ Cập nhật điều kiện khả dụng
+  const isAvailable = vehicle.status === "Available";
 
   return (
     <Box sx={{ maxWidth: 1200, mx: "auto", px: { xs: 2, md: 0 } }}>
@@ -122,16 +156,15 @@ export default function VehicleDetailPage() {
               >
                 {!vehicle.imageUrl && "🚗"}
               </Box>
+
+              {/* ✅ Hiển thị chip trạng thái đúng màu */}
               <Chip
-                label={vehicle.status}
-                color={isAvailable ? "success" : "warning"}
+                label={statusInfo.label}
                 sx={{
                   position: "absolute",
                   top: 16,
                   left: 16,
-                  bgcolor: isAvailable
-                    ? "rgba(47, 181, 108, 0.95)"
-                    : "rgba(255, 152, 0, 0.95)",
+                  bgcolor: `${statusInfo.color}E6`,
                   backdropFilter: "blur(4px)",
                   color: "white",
                   fontWeight: 600,
@@ -148,7 +181,11 @@ export default function VehicleDetailPage() {
               <Typography variant="h5" fontWeight={700} gutterBottom>
                 {vehicle.brand} {vehicle.model}
               </Typography>
-              <Typography variant="subtitle1" color="text.secondary" gutterBottom>
+              <Typography
+                variant="subtitle1"
+                color="text.secondary"
+                gutterBottom
+              >
                 Biển số: {vehicle.licensePlate}
               </Typography>
 
@@ -199,28 +236,28 @@ export default function VehicleDetailPage() {
                 </Box>
               </Stack>
 
+              {/* ✅ Button đổi màu & text theo trạng thái */}
               <Stack direction="row" spacing={2}>
                 <Button
                   variant="contained"
                   fullWidth
                   sx={{
-                    bgcolor: isAvailable ? "#2fb56c" : "#ff9800",
+                    bgcolor: statusInfo.color,
                     height: 48,
                     borderRadius: 2,
                     textTransform: "none",
                     fontWeight: 600,
                     transition: "all 0.2s ease-in-out",
                     "&:hover": {
-                      bgcolor: isAvailable ? "#2aa561" : "#e68900",
+                      bgcolor: `${statusInfo.color}CC`,
                       transform: "translateY(-2px)",
-                      boxShadow: isAvailable
-                        ? "0 4px 12px rgba(47, 181, 108, 0.4)"
-                        : "0 4px 12px rgba(255, 152, 0, 0.4)",
+                      boxShadow: `0 4px 12px ${statusInfo.color}66`,
                     },
                   }}
                 >
-                  {isAvailable ? "Đặt xe" : "Nhận xe"}
+                  {statusInfo.buttonText}
                 </Button>
+
                 <Button
                   variant="outlined"
                   fullWidth
@@ -228,18 +265,16 @@ export default function VehicleDetailPage() {
                   sx={{
                     height: 48,
                     borderRadius: 2,
-                    borderColor: isAvailable ? "#2fb56c" : "#ff9800",
+                    borderColor: statusInfo.color,
                     borderWidth: 1.5,
-                    color: isAvailable ? "#2fb56c" : "#ff9800",
+                    color: statusInfo.color,
                     textTransform: "none",
                     fontWeight: 600,
                     transition: "all 0.2s ease-in-out",
                     "&:hover": {
-                      borderColor: isAvailable ? "#2aa561" : "#e68900",
-                      color: isAvailable ? "#2aa561" : "#e68900",
-                      bgcolor: isAvailable
-                        ? "rgba(47, 181, 108, 0.04)"
-                        : "rgba(255, 152, 0, 0.04)",
+                      borderColor: `${statusInfo.color}CC`,
+                      color: `${statusInfo.color}CC`,
+                      bgcolor: `${statusInfo.color}10`,
                       transform: "translateY(-2px)",
                     },
                   }}
@@ -251,9 +286,9 @@ export default function VehicleDetailPage() {
           </Card>
         </Grid>
 
-        {/* Right section - Current rental and history */}
+        {/* Phần bên phải giữ nguyên */}
         <Grid item xs={12} md={7}>
-          {/* Current rental info */}
+          {/* ... Current rental + history giữ nguyên code gốc ... */}
           <Paper
             sx={{
               p: 3,
@@ -355,7 +390,7 @@ export default function VehicleDetailPage() {
             )}
           </Paper>
 
-          {/* Rental history */}
+          {/* History giữ nguyên */}
           <Paper
             sx={{
               p: 3,
