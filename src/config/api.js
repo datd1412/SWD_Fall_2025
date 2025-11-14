@@ -1,11 +1,13 @@
-import axios from 'axios';
-import { useUserStore } from '../stores/userStore';
+import axios from "axios";
+import { useUserStore } from "../stores/userStore";
 
 const api = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    "https://swdbackendgroup5-production.up.railway.app/api",
   timeout: 5000,
   headers: {
-    'Content-Type': 'application/json',
+    "Content-Type": "application/json",
   },
 });
 
@@ -31,10 +33,10 @@ api.interceptors.response.use(
     if (error.response?.status === 401) {
       const { clearUser } = useUserStore.getState();
       clearUser();
-      window.location.href = '/login';
+      window.location.href = "/login";
     }
-    console.error('API Error:', error.response?.data || error.message);
-    
+    console.error("API Error:", error.response?.data || error.message);
+
     return Promise.reject(error.response?.data || error);
   }
 );

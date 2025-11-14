@@ -1,97 +1,96 @@
-import React from "react";
 import {
   Box,
-  Grid,
-  Typography,
   Button,
   Card,
   CardContent,
-  Stack,
   CircularProgress,
+  Grid,
+  Stack,
+  Typography,
 } from "@mui/material";
-import VehicleCard from "../../components/VehicleCard";
+import { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import vehicleService from "../../../services/vehicleService";
-
-// const stats = [
-//   { title: "Xe sẵn sàng", value: 3 },
-//   { title: "Đã đặt trước", value: 2 },
-//   { title: "Đang cho thuê", value: 1 },
-//   { title: "Tổng số xe", value: 6 },
-// ];
-
-// const vehicles = [
-//   {
-//     name: "Honda City RS",
-//     license: "59T2-87343",
-//     status: "Sẵn sàng",
-//     battery: 95,
-//     distance: 12500,
-//   },
-//   {
-//     name: "VinFast VF e34",
-//     license: "51F-12345",
-//     status: "Đã đặt trước",
-//     battery: 88,
-//     distance: 8200,
-//     customer: "Nguyễn Văn B",
-//     time: "2025-01-16 09:00",
-//   },
-//   {
-//     name: "Tesla Model 3",
-//     license: "30A-99999",
-//     status: "Đang thuê",
-//     battery: 72,
-//     distance: 15600,
-//     customer: "Trần Thị C",
-//     time: "2025-01-15 08:00",
-//   },
-//   {
-//     name: "Hyundai Kona",
-//     license: "92B-55555",
-//     status: "Sẵn sàng",
-//     battery: 100,
-//     distance: 5400,
-//   },
-//   {
-//     name: "Nissan Leaf",
-//     license: "43C-77777",
-//     status: "Đã đặt trước",
-//     battery: 65,
-//     distance: 22100,
-//     customer: "Lê Văn D",
-//     time: "2025-01-16 14:00",
-//   },
-//   {
-//     name: "BYD Atto 3",
-//     license: "79D-88888",
-//     status: "Sẵn sàng",
-//     battery: 80,
-//     distance: 9800,
-//   },
-// ];
+import VehicleCard from "../../components/VehicleCard";
 
 export default function DashboardList() {
   const navigate = useNavigate();
-  const [selectedStatus, setSelectedStatus] = React.useState("all");
-  const [vehicles, setVehicles] = React.useState([]);
-  const [loading, setLoading] = React.useState(false);
-  const [error, setError] = React.useState(null);
+  const [selectedStatus, setSelectedStatus] = useState("all");
+  const [vehicles, setVehicles] = useState([]);
+  const [dashboardStats, setDashboardStats] = useState(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState(null);
 
-  React.useEffect(() => {
-    const fetchVehicles = async () => {
+  const mapStatus = (status) => {
+    if (!status) return "";
+    const ss = String(status).toLowerCase();
+    if (ss === "available") return "Sẵn sàng";
+    if (ss === "booked") return "Đã đặt trước";
+    if (ss === "inuse") return "Đang thuê";
+    if (ss === "maintenance") return "Bảo trì";
+    if (ss === "damaged") return "Hỏng hóc";
+    return status;
+  };
+
+  useEffect(() => {
+    const fetchDashboard = async () => {
       try {
         setLoading(true);
-        const response = await vehicleService.getAllVehicles();
-        setVehicles(response.data);
+
+        const userStr = localStorage.getItem("user");
+        const user = userStr ? JSON.parse(userStr) : null;
+        const stationId = user?.stationId || 1;
+
+        console.log(" Fetching dashboard for stationId:", stationId);
+        const response = await vehicleService.getStaffDashboard(stationId);
+        console.log(" Dashboard response:", response);
+
+        if (response) {
+          const dashData = response;
+
+          setDashboardStats({
+            vehicles: dashData.vehicles,
+            bookings: dashData.bookings,
+            rentals: dashData.rentals,
+            unverifiedUsers: dashData.unverifiedUsers,
+          });
+
+          const normalized = dashData.vehicleList.map((v) => ({
+            id: v.id,
+            name: `${v.brand || ""} ${v.model || ""}`.trim(),
+            license: v.licensePlate,
+            battery: v.batteryCapacity ?? 0,
+            mileage: 0,
+            status: mapStatus(v.status),
+            image: v.imageUrl,
+            customer: v.booking
+              ? {
+                  name: v.booking.customerName,
+                  time: new Date(v.booking.scheduledPickupTime).toLocaleString(
+                    "vi-VN"
+                  ),
+                }
+              : v.rental
+              ? {
+                  name: v.rental.customerName,
+                  time: new Date(v.rental.pickupTime).toLocaleString("vi-VN"),
+                }
+              : null,
+            booking: v.booking,
+            rental: v.rental,
+            raw: v,
+          }));
+
+          setVehicles(normalized);
+        }
       } catch (error) {
-        console.error("Error fetching vehicles:", error);
+        console.error("Error fetching dashboard:", error);
         setError("Không thể tải danh sách xe");
       } finally {
         setLoading(false);
       }
     };
-    fetchVehicles();
+    fetchDashboard();
   }, []);
 
   const handleViewDetail = (vehicle) => {
@@ -100,7 +99,7 @@ export default function DashboardList() {
     });
   };
 
-  const filteredVehicles = React.useMemo(() => {
+  const filteredVehicles = useMemo(() => {
     if (selectedStatus === "all") return vehicles;
     return vehicles.filter((v) => {
       switch (selectedStatus) {
@@ -116,7 +115,16 @@ export default function DashboardList() {
     });
   }, [selectedStatus, vehicles]);
 
-  const stats = React.useMemo(() => {
+  const stats = useMemo(() => {
+    if (dashboardStats?.vehicles) {
+      return [
+        { title: "Xe sẵn sàng", value: dashboardStats.vehicles.available },
+        { title: "Đã đặt trước", value: dashboardStats.vehicles.booked },
+        { title: "Đang cho thuê", value: dashboardStats.vehicles.inUse },
+        { title: "Tổng số xe", value: dashboardStats.vehicles.total },
+      ];
+    }
+
     const ready = vehicles.filter((v) => v.status === "Sẵn sàng").length;
     const booked = vehicles.filter((v) => v.status === "Đã đặt trước").length;
     const rented = vehicles.filter((v) => v.status === "Đang thuê").length;
@@ -126,9 +134,9 @@ export default function DashboardList() {
       { title: "Đang cho thuê", value: rented },
       { title: "Tổng số xe", value: vehicles.length },
     ];
-  }, [vehicles]);
+  }, [vehicles, dashboardStats]);
 
-   return (
+  return (
     <Box>
       {/* Stats */}
       <Grid container spacing={2} mb={3}>
@@ -154,7 +162,6 @@ export default function DashboardList() {
         ))}
       </Grid>
 
-      {/* Bộ lọc */}
       <Stack direction="row" spacing={1.5} mb={3}>
         <Button
           variant={selectedStatus === "all" ? "contained" : "outlined"}
@@ -186,7 +193,6 @@ export default function DashboardList() {
         </Button>
       </Stack>
 
-      {/* Loading / Error / Danh sách xe */}
       {loading ? (
         <Box textAlign="center" mt={4}>
           <CircularProgress color="success" />
