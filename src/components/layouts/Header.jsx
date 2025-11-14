@@ -21,6 +21,7 @@ import LogoutIcon from "@mui/icons-material/Logout";
 import { useNavigate, useLocation } from "react-router-dom";
 import Link from "@mui/material/Link";
 import React from "react";
+import { useUserStore } from "../../stores/userStore";
 
 const today = new Date();
 const dayOfWeek = [
@@ -43,6 +44,7 @@ export default function Header({ drawerWidth = 260 }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const location = useLocation();
+  const logout = useUserStore((state) => state.logout);
 
   const getHeaderTitle = () => {
     const path = location.pathname;
@@ -96,6 +98,11 @@ export default function Header({ drawerWidth = 260 }) {
     navigate("/profile");
     handleClose();
   };
+
+  const handleLogout = () => {
+    logout();
+    localStorage.clear();
+  }
 
   return (
     <AppBar
@@ -265,7 +272,9 @@ export default function Header({ drawerWidth = 260 }) {
             <ListItemIcon>
               <LogoutIcon fontSize="small" color="action" />
             </ListItemIcon>
-            <Typography variant="body2">Đăng xuất</Typography>
+            <Typography variant="body2" onClick={handleLogout}>
+              Đăng xuất
+            </Typography>
           </MenuItem>
         </Menu>
       </Toolbar>

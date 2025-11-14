@@ -8,8 +8,6 @@ import {
   InputAdornment,
   IconButton,
   Button,
-  Checkbox,
-  FormControlLabel,
   Link,
   Avatar,
   Stack,
@@ -17,66 +15,41 @@ import {
 } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
 import EmailIcon from "@mui/icons-material/Email";
-import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
-import Visibility from "@mui/icons-material/Visibility";
-import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useUserStore } from "../../stores/userStore";
-import { Navigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import authService from "../../../services/authService";
-import {
-  dismissToast,
-  showError,
-  showLoading,
-  showSuccess,
-} from "../../utils/toast";
+import { showError, showLoading, showSuccess, dismissToast } from "../../utils/toast";
 
-const loginSchema = yup.object({
+const forgotSchema = yup.object({
   email: yup.string().email("Email không hợp lệ").required("Email bắt buộc"),
-  password: yup
-    .string()
-    .min(6, "Mật khẩu ít nhất 6 ký tự")
-    .required("Mật khẩu bắt buộc"),
 });
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const login = useUserStore((state) => state.login);
-  const token = useUserStore((state) => state.token);
-
+export default function ForgotPasswordPage() {
   const {
     handleSubmit,
     control,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(forgotSchema),
     defaultValues: {
       email: "",
-      password: "",
     },
   });
 
   const onSubmit = async (data) => {
     try {
-      const toastId = showLoading("Đang đăng nhập...");
-      const response = await authService.login(data.email, data.password);
+      const toastId = showLoading("Đang xử lý...");
+      const response = await authService.forgotPassword(data.email);
       dismissToast(toastId);
 
       if (response) {
-        login(response, response.token);
+        showSuccess("Vui lòng kiểm tra email để đặt lại mật khẩu");
       }
-
-      showSuccess("Đăng nhập thành công");
     } catch (error) {
-      showError(error.errors?.Email || "Đăng nhập thất bại");
+      showError(error.errors?.Email || "Yêu cầu thất bại");
     }
   };
-
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <Box
@@ -133,15 +106,9 @@ export default function LoginPage() {
               </Typography>
 
               <Stack spacing={1.2}>
-                <Typography variant="body2">
-                  • Quản lý giao nhận xe nhanh chóng
-                </Typography>
-                <Typography variant="body2">
-                  • Theo dõi tình trạng xe real-time
-                </Typography>
-                <Typography variant="body2">
-                  • Chữ ký điện tử và lưu trữ ảnh
-                </Typography>
+                <Typography variant="body2">• Quản lý giao nhận xe nhanh chóng</Typography>
+                <Typography variant="body2">• Theo dõi tình trạng xe real-time</Typography>
+                <Typography variant="body2">• Chữ ký điện tử và lưu trữ ảnh</Typography>
               </Stack>
             </Box>
           </Grid>
@@ -151,25 +118,17 @@ export default function LoginPage() {
             item
             xs={12}
             md={6}
-            sx={{
-              p: { xs: 4, md: 6 },
-              background: "white",
-              flexGrow: 1,
-            }}
+            sx={{ p: { xs: 4, md: 6 }, background: "white", flexGrow: 1 }}
           >
             <Box sx={{ maxWidth: 460, mx: "auto" }}>
               <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-                Đăng nhập
+                Quên mật khẩu
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.
+                Nhập email của bạn để nhận liên kết đặt lại mật khẩu.
               </Typography>
 
-              <Box
-                component="form"
-                onSubmit={handleSubmit(onSubmit)}
-                noValidate
-              >
+              <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
                 {/* Email */}
                 <Controller
                   name="email"
@@ -194,66 +153,6 @@ export default function LoginPage() {
                   )}
                 />
 
-                {/* Password */}
-                <Controller
-                  name="password"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="Mật khẩu"
-                      placeholder="Nhập mật khẩu của bạn"
-                      margin="normal"
-                      type={showPassword ? "text" : "password"}
-                      error={!!errors.password}
-                      helperText={errors.password?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <LockOutlinedIcon color="action" />
-                          </InputAdornment>
-                        ),
-                        endAdornment: (
-                          <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword((s) => !s)}
-                            >
-                              {showPassword ? (
-                                <VisibilityOff />
-                              ) : (
-                                <Visibility />
-                              )}
-                            </IconButton>
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mt: 1,
-                  }}
-                >
-                  <FormControlLabel
-                    control={<Checkbox />}
-                    label="Ghi nhớ đăng nhập"
-                  />
-                  <Link
-                    href="/forgot-password"
-                    underline="none"
-                    variant="body2"
-                    color="success"
-                  >
-                    Quên mật khẩu?
-                  </Link>
-                </Box>
-
                 <Button
                   type="submit"
                   fullWidth
@@ -266,8 +165,14 @@ export default function LoginPage() {
                     textTransform: "none",
                   }}
                 >
-                  Đăng nhập
+                  Gửi yêu cầu
                 </Button>
+              </Box>
+
+              <Box sx={{ mt: 3, textAlign: "center" }}>
+                <Link href="/login" underline="none" color="success" variant="body2">
+                  Quay lại đăng nhập
+                </Link>
               </Box>
 
               <Divider sx={{ my: 3 }} />

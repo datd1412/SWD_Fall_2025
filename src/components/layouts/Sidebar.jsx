@@ -40,7 +40,6 @@ export default function Sidebar({ drawerWidth = 260 }) {
   const handleLogout = () => {
     logout();
     localStorage.clear();
-    console.log("Logout clicked");
   };
 
   return (
@@ -104,10 +103,10 @@ export default function Sidebar({ drawerWidth = 260 }) {
           </Avatar>
           <Box>
             <Typography fontWeight={600} fontSize={15} color="#222">
-              {user.fullName}
+              {user ? user.fullName : "Người dùng"}
             </Typography>
             <Typography fontSize={13} color="text.secondary">
-              Chi nhánh Quận {user.stationId}
+              Chi nhánh Quận {user ? user.stationId : "..."}
             </Typography>
           </Box>
         </Box>

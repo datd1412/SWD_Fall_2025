@@ -17,6 +17,8 @@ import ErrorPage from "./pages/ErrorPage";
 import HistoryPage from "./pages/HistoryPage";
 import VehicleDetailPage from "./pages/VehicleDetailPage";
 import ToastProvider from "./components/providers/ToastProvider";
+import ForgotPasswordPage from "./pages/auth/ForgotPassword";
+import ResetPasswordPage from "./pages/auth/ResetPassword";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useUserStore();
@@ -99,6 +101,14 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: '/forgot-password',
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password/:token",
+    element: <ResetPasswordPage />,
   },
   {
     path: "*",

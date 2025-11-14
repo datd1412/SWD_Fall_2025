@@ -1,11 +1,9 @@
 import {
   Box,
   Button,
-  Container,
   FormControlLabel,
   Checkbox,
   Typography,
-  FormControl,
   CircularProgress,
   TextField,
   Alert,
@@ -20,38 +18,82 @@ import { useRef } from "react";
 import dayjs from "dayjs";
 import rentalService from "../../services/rentalService";
 import { dismissToast, showLoading, showSuccess } from "../utils/toast";
+import { useForm, Controller, useWatch } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
+
+const returnInspectionSchema = yup.object({
+  odometerAfterReturn: yup
+    .number()
+    .positive("ODO phải lớn hơn 0")
+    .required("ODO sau khi trả bắt buộc"),
+  returnBatteryLevel: yup
+    .number()
+    .min(0, "Mức pin từ 0 đến 100")
+    .max(100, "Mức pin từ 0 đến 100")
+    .required("Mức pin sau khi trả bắt buộc"),
+  totalDistance: yup
+    .number()
+    .positive("Tổng quãng đường phải lớn hơn 0")
+    .required("Tổng quãng đường bắt buộc"),
+  returnNotes: yup.string().optional(),
+  renterSignature: yup.string().required("Chữ ký người thuê bắt buộc"),
+  staffSignature: yup.string().required("Chữ ký nhân viên bắt buộc"),
+  damageReport: yup.object().shape({
+    batteryOk: yup.boolean(),
+    interiorOk: yup.boolean(),
+    cleanOk: yup.boolean(),
+    noTollFees: yup.boolean(),
+    trunkOk: yup.boolean(),
+  }),
+  additionalFees: yup.number().optional(),
+  additionalFeesReason: yup.string().optional(),
+});
 
 const ReturnInspectionPage = () => {
   const navigate = useNavigate();
   const location = useLocation();
   const [pageLoading, setPageLoading] = useState(false);
-  const [rental, setRental] = useState(location.state?.rentalInfo || null);
+  const [rental] = useState(location.state?.rentalInfo || null);
   const [rentalFee] = useState(location.state?.vehicleProps || null);
   const [loading, setLoading] = useState(false);
   const [images, setImages] = useState([null, null, null, null, null]);
+  const [damageReport, setDamageReport] = useState({
+    batteryOk: false,
+    interiorOk: false,
+    cleanOk: false,
+    noTollFees: false,
+    trunkOk: false,
+  });
   const renterSigRef = useRef(null);
   const staffSigRef = useRef(null);
-  const [formValues, setFormValues] = useState({
-    rentalId: rental ? rental.id : null,
-    returnBatteryLevel: 0,
-    odometerAfterReturn: 0,
-    totalDistance: 0,
-    additionalFees: rentalFee.additionalFees ? rentalFee.additionalFees : 0,
-    additionalFeesReason: rentalFee.additionalFeesReason
-      ? rentalFee.additionalFeesReason
-      : "",
-    returnNotes: "",
-    damageReport: {
-      batteryOk: false,
-      interiorOk: false,
-      cleanOk: false,
-      noTollFees: false,
-      trunkOk: false,
+
+  const {
+    handleSubmit,
+    control,
+    setValue,
+  } = useForm({
+    resolver: yupResolver(returnInspectionSchema),
+    defaultValues: {
+      odometerAfterReturn: rental ? rental.odometerAfterReturn || 0 : 0,
+      returnBatteryLevel: rental ? rental.returnBatteryLevel || 0 : 0,
+      totalDistance: rental ? rental.totalDistance || 0 : 0,
+      returnNotes: rental ? rental.returnNotes || "" : "",
+      renterSignature: "",
+      staffSignature: "",
+      damageReport: {
+        batteryOk: false,
+        interiorOk: false,
+        cleanOk: false,
+        noTollFees: false,
+        trunkOk: false,
+      },
+      additionalFees: rentalFee ? rentalFee.additionalFees || 0 : 0,
+      additionalFeesReason: rentalFee ? rentalFee.additionalFeesReason || "" : "",
     },
-    returnImageUrls: [],
-    renterSignature: "",
-    staffSignature: "",
   });
+
+  const formValues = useWatch({ control });
 
   const vehicle = location.state?.vehicle || {
     name: "Honda City RS",
@@ -72,56 +114,42 @@ const ReturnInspectionPage = () => {
       updated[index] = previewUrl;
       return updated;
     });
-
-    // Lưu vào formValues.returnImageUrls (string[])
-    setFormValues((prev) => {
-      const updatedUrls = [...prev.returnImageUrls];
-
-      updatedUrls[index] = previewUrl;
-
-      return {
-        ...prev,
-        returnImageUrls: updatedUrls,
-      };
-    });
   };
 
-  const handleInputChange = (field) => (event) => {
-    setFormValues((prev) => ({
-      ...prev,
-      [field]: event.target.value,
-    }));
+  const handleInputChange = (field) => (e) => {
+    setValue(field, e.target.value);
   };
 
   const handleDamageCheckChange = (key) => (e) => {
-    setFormValues((prev) => ({
+    setDamageReport((prev) => ({
       ...prev,
-      damageReport: {
-        ...prev.damageReport,
-        [key]: e.target.checked,
-      },
+      [key]: e.target.checked,
     }));
+    setValue(`damageReport.${key}`, e.target.checked);
   };
 
   const handleBack = () => {
     navigate(-1);
   };
 
-  const handleSubmit = async (event) => {
-    event.preventDefault();
+  const onSubmit = async (data) => {
     setLoading(true);
     setPageLoading(true);
     try {
       const payload = {
-        ...formValues,
+        ...data,
+        rentalId: rental.id,
+        additionalFees: rentalFee.additionalFees || 0,
+        additionalFeesReason: rentalFee.additionalFeesReason || "",
         damageReport: JSON.stringify(
           Object.fromEntries(
-            Object.entries(formValues.damageReport).map(([k, v]) => [
+            Object.entries(damageReport).map(([k, v]) => [
               k,
               v ? "1" : "0",
             ])
           )
         ),
+        returnImageUrls: images.filter(img => img !== null),
       };
       const toastId = showLoading("Đang xử lý...");
       const response = await rentalService.checkinRental(rental.id, payload);
@@ -709,10 +737,7 @@ const ReturnInspectionPage = () => {
                         },
                       }}
                       onEnd={() => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          renterSignature: renterSigRef.current.toDataURL(),
-                        }));
+                        setValue("renterSignature", renterSigRef.current.toDataURL());
                       }}
                     />
 
@@ -720,10 +745,7 @@ const ReturnInspectionPage = () => {
                       size="small"
                       onClick={() => {
                         renterSigRef.current.clear();
-                        setFormValues((prev) => ({
-                          ...prev,
-                          renterSignature: "",
-                        }));
+                        setValue("renterSignature", "");
                       }}
                       sx={{ mt: 1 }}
                     >
@@ -756,10 +778,7 @@ const ReturnInspectionPage = () => {
                         },
                       }}
                       onEnd={() => {
-                        setFormValues((prev) => ({
-                          ...prev,
-                          staffSignature: staffSigRef.current.toDataURL(),
-                        }));
+                        setValue("staffSignature", staffSigRef.current.toDataURL());
                       }}
                     />
 
@@ -767,10 +786,7 @@ const ReturnInspectionPage = () => {
                       size="small"
                       onClick={() => {
                         staffSigRef.current.clear();
-                        setFormValues((prev) => ({
-                          ...prev,
-                          staffSignature: "",
-                        }));
+                        setValue("staffSignature", "");
                       }}
                       sx={{ mt: 1 }}
                     >
@@ -795,7 +811,7 @@ const ReturnInspectionPage = () => {
                   variant="contained"
                   color="success"
                   size="large"
-                  onClick={handleSubmit}
+                  onClick={handleSubmit(onSubmit)}
                   disabled={loading}
                   sx={{
                     flex: 1,
