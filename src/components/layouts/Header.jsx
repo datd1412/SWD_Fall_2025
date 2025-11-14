@@ -1,26 +1,27 @@
+import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
+import LogoutIcon from "@mui/icons-material/Logout";
+import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
+import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
+import SearchIcon from "@mui/icons-material/Search";
 import {
-  AppBar,
-  Toolbar,
-  Typography,
-  Box,
-  InputBase,
-  IconButton,
-  Avatar,
-  Stack,
   alpha,
+  AppBar,
+  Avatar,
+  Box,
+  Divider,
+  IconButton,
+  InputBase,
+  ListItemIcon,
   Menu,
   MenuItem,
-  ListItemIcon,
-  Divider,
+  Stack,
+  Toolbar,
+  Typography,
 } from "@mui/material";
-import SearchIcon from "@mui/icons-material/Search";
-import NotificationsNoneIcon from "@mui/icons-material/NotificationsNone";
-import CalendarTodayIcon from "@mui/icons-material/CalendarToday";
-import PersonOutlineIcon from "@mui/icons-material/PersonOutline";
-import LogoutIcon from "@mui/icons-material/Logout";
-import { useNavigate, useLocation } from "react-router-dom";
 import Link from "@mui/material/Link";
 import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import authService from "../../../services/authService";
 
 const today = new Date();
 const dayOfWeek = [
@@ -43,6 +44,31 @@ export default function Header({ drawerWidth = 260 }) {
   const [anchorEl, setAnchorEl] = React.useState(null);
   const open = Boolean(anchorEl);
   const location = useLocation();
+  const [userProfile, setUserProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await authService.getUserProfile();
+        // response chính là object user luôn
+        if (response) {
+          setUserProfile(response);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
+
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
 
   const getHeaderTitle = () => {
     const path = location.pathname;
@@ -227,7 +253,7 @@ export default function Header({ drawerWidth = 260 }) {
                 height: 40,
               }}
             >
-              NA
+              {userProfile ? getInitials(userProfile.fullName) : "NA"}
             </Avatar>
           </IconButton>
         </Stack>

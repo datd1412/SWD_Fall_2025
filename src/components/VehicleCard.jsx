@@ -1,48 +1,39 @@
-import React from "react";
-import { useNavigate } from 'react-router-dom';
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import SpeedIcon from "@mui/icons-material/Speed";
 import {
   Box,
+  Button,
   Card,
   CardContent,
   CardMedia,
-  Typography,
-  Button,
   Chip,
   Divider,
+  Typography,
 } from "@mui/material";
-import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
-import SpeedIcon from "@mui/icons-material/Speed";
+import { useNavigate } from "react-router-dom";
 
 export default function VehicleCard({
   id,
-  licensePlate,
-  model,
-  brand,
-  batteryCapacity,
+  name,
+  license,
+  battery,
+  mileage,
   status,
-  imageUrl,
-  description,
-  stationName,
+  image,
+  customer,
+  raw,
   onViewDetail,
 }) {
   const navigate = useNavigate();
 
-  // Map trạng thái tiếng Anh -> tiếng Việt
-  const statusMap = {
-    Available: "Sẵn sàng",
-    Booked: "Đã đặt trước",
-    Rented: "Đang thuê",
-    Maintenance: "Bảo trì",
-  };
-  const displayStatus = statusMap[status] || status;
-
-  // Gán màu cho chip trạng thái
-  const statusColor = {
-    "Sẵn sàng": "success",
-    "Đã đặt trước": "info",
-    "Đang thuê": "warning",
-    "Bảo trì": "error",
-  }[displayStatus] || "default";
+  // Removed unused handlePrimaryClick
+  // Gán màu trạng thái
+  const statusColor =
+    {
+      "Sẵn sàng": "success",
+      "Đã đặt trước": "info",
+      "Đang thuê": "warning",
+    }[status] || "default";
 
   return (
     <Card
@@ -68,18 +59,18 @@ export default function VehicleCard({
         sx={{
           position: "relative",
           width: "100%",
-          pt: "56.25%",
-          background: imageUrl
+          pt: "56.25%", // 16:9 Aspect Ratio
+          background: image
             ? "none"
             : "linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 50%, #34D399 100%)",
           overflow: "hidden",
         }}
       >
-        {imageUrl ? (
+        {image ? (
           <CardMedia
             component="img"
-            src={imageUrl}
-            alt={model}
+            src={image}
+            alt={name}
             sx={{
               position: "absolute",
               top: 0,
@@ -108,7 +99,7 @@ export default function VehicleCard({
 
       {/* Chip trạng thái */}
       <Chip
-        label={displayStatus}
+        label={status}
         color={statusColor}
         size="small"
         sx={{
@@ -139,10 +130,8 @@ export default function VehicleCard({
             whiteSpace: "nowrap",
           }}
         >
-          {brand} {model}
+          {name}
         </Typography>
-
-        {/* Biển số */}
         <Typography
           variant="body2"
           color="text.secondary"
@@ -153,20 +142,60 @@ export default function VehicleCard({
             whiteSpace: "nowrap",
           }}
         >
-          Biển số: {licensePlate}
+          Biển số: {license}
         </Typography>
 
-        {/* Dung lượng pin */}
+        {/* Pin + Km */}
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <ElectricBoltIcon fontSize="small" color="success" />
-            <Typography variant="body2">{batteryCapacity}%</Typography>
+            <Typography variant="body2">{battery}%</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <SpeedIcon fontSize="small" color="action" />
-            <Typography variant="body2">{stationName}</Typography>
+            <Typography variant="body2">
+              {Number(mileage).toLocaleString()} km
+            </Typography>
           </Box>
         </Box>
+
+        {/* Nếu có khách hàng */}
+        {customer && (
+          <Box
+            sx={{
+              bgcolor: "#f9fafb",
+              borderRadius: 2,
+              p: 1.5,
+              mb: 1,
+              border: "1px solid #e5e7eb",
+              minHeight: "auto", // Allow box to shrink
+            }}
+          >
+            <Typography
+              variant="body2"
+              fontWeight={500}
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+              }}
+            >
+              Khách hàng: {customer.name}
+            </Typography>
+            <Typography
+              variant="caption"
+              color="text.secondary"
+              sx={{
+                overflow: "hidden",
+                textOverflow: "ellipsis",
+                whiteSpace: "nowrap",
+                display: "block",
+              }}
+            >
+              Thời gian: {customer.time}
+            </Typography>
+          </Box>
+        )}
 
         <Divider sx={{ my: 1 }} />
 
@@ -179,28 +208,154 @@ export default function VehicleCard({
             mt: 2,
           }}
         >
-          <Button
-            variant="contained"
-            color="success"
-            sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
-            onClick={() =>
-              navigate(`/dashboard/vehicle-detail/${encodeURIComponent(licensePlate)}`, {
-                state: {
-                  id,
-                  licensePlate,
-                  model,
-                  brand,
-                  batteryCapacity,
-                  status: displayStatus,
-                  imageUrl,
-                  description,
-                  stationName,
-                },
-              })
-            }
-          >
-            Xem chi tiết
-          </Button>
+          {status === "Đang thuê" ? (
+            <>
+              <Button
+                variant="contained"
+                color="primary"
+                sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+                onClick={() => {
+                  navigate(`/check-in/return/${encodeURIComponent(license)}`, {
+                    state: {
+                      name,
+                      license,
+                      battery,
+                      mileage,
+                      status,
+                      image,
+                      customer,
+                    },
+                  });
+                }}
+              >
+                Nhận xe
+              </Button>
+              <Button
+                variant="outlined"
+                color="inherit"
+                onClick={() => {
+                  if (onViewDetail) {
+                    onViewDetail({
+                      name,
+                      license,
+                      battery,
+                      mileage,
+                      status,
+                      image,
+                      customer,
+                    });
+                    return;
+                  }
+                  // fallback navigate
+                  navigate(
+                    `/dashboard/check-in/${encodeURIComponent(license)}`,
+                    {
+                      state: {
+                        name,
+                        license,
+                        battery,
+                        mileage,
+                        status,
+                        image,
+                        customer,
+                      },
+                    }
+                  );
+                }}
+                sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+              >
+                Chi tiết
+              </Button>
+            </>
+          ) : (
+            <>
+              <Button
+                variant="contained"
+                color="success"
+                sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+                onClick={() => {
+                  if (status === "Đã đặt trước") {
+                    // navigate to delivery/prepare page (pass id and booking if available)
+                    navigate(`/check-out/${encodeURIComponent(license)}`, {
+                      state: {
+                        id,
+                        name,
+                        license,
+                        battery,
+                        mileage,
+                        status,
+                        image,
+                        customer,
+                        booking: raw?.booking || null,
+                        rental: raw?.rental || null,
+                        raw,
+                      },
+                    });
+                    return;
+                  }
+                  // for available vehicles, navigate to vehicle detail page
+                  if (status === "Sẵn sàng") {
+                    navigate(
+                      `/dashboard/vehicle-detail/${encodeURIComponent(
+                        license
+                      )}`,
+                      {
+                        state: {
+                          id,
+                          name,
+                          license,
+                          battery,
+                          mileage,
+                          status,
+                          image,
+                          customer,
+                        },
+                      }
+                    );
+                    return;
+                  }
+                  // fallback: view checkout/detail
+                  if (onViewDetail) {
+                    onViewDetail({
+                      name,
+                      license,
+                      battery,
+                      mileage,
+                      status,
+                      image,
+                      customer,
+                    });
+                    return;
+                  }
+                  navigate(
+                    `/dashboard/check-in/${encodeURIComponent(license)}`,
+                    {
+                      state: {
+                        name,
+                        license,
+                        battery,
+                        mileage,
+                        status,
+                        image,
+                        customer,
+                      },
+                    }
+                  );
+                }}
+              >
+                {status === "Đã đặt trước" ? "Giao xe" : "Xem chi tiết"}
+              </Button>
+              {status !== "Sẵn sàng" && (
+                <Button
+                  variant="outlined"
+                  color="inherit"
+                  sx={{ flex: 1, textTransform: "none", borderRadius: 2 }}
+                >
+                  Chi tiết
+                </Button>
+              )}
+            </>
+          )}
         </Box>
       </CardContent>
     </Card>
