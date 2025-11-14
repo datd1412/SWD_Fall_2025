@@ -38,7 +38,6 @@ export default function LoginPage() {
       const toastId = showLoading("Đang đăng nhập...");
       const response = await authService.login(email, password);
       dismissToast(toastId);
-      console.log("Login response:", response);
       if (response) {
         login(response, response.token);
       }

@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
@@ -16,6 +16,7 @@ import SpeedIcon from "@mui/icons-material/Speed";
 import CalendarMonthIcon from "@mui/icons-material/CalendarMonth";
 import ColorLensIcon from "@mui/icons-material/ColorLens";
 import MonetizationOnIcon from "@mui/icons-material/MonetizationOn";
+import rentalService from "../../services/rentalService";
 
 export default function VehicleCard({
   id,
@@ -31,8 +32,49 @@ export default function VehicleCard({
   imageUrl,
   description,
   stationName,
+  booking,
+  rental,
 }) {
   const navigate = useNavigate();
+  const [rentalInfo, setRentalInfo] = useState(null);
+  const [vehicleProps, setVehicleProps] = React.useState(null);
+  const [loading, setLoading] = useState(!location.state);
+
+  useEffect(() => {
+    const fetchVehicleProps = async () => {
+      try {
+        if (rental && rental.id) {
+          setLoading(true);
+          const response = await rentalService.getRentalById(rental.id);
+          setVehicleProps(response);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchVehicleProps();
+  }, []);
+
+  useEffect(() => {
+    const fetchRentalData = async () => {
+      try {
+        if (rental && rental.id) {
+          setLoading(true);
+          const response = await rentalService.getRentalCheckinInfoById(
+            rental.id
+          );
+          setRentalInfo(response);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchRentalData();
+  }, []);
 
   const statusMap = {
     Available: "Sẵn sàng",
@@ -64,6 +106,8 @@ export default function VehicleCard({
     imageUrl,
     description,
     stationName,
+    booking,
+    rental,
   };
 
   const handleViewDetail = () => {
@@ -80,7 +124,7 @@ export default function VehicleCard({
 
   const handleCheckIn = () => {
     navigate(`/check-in/return/${encodeURIComponent(licensePlate)}`, {
-      state: { vehicle: vehicleData },
+      state: { rentalInfo, vehicleProps },
     });
   };
 
@@ -205,7 +249,10 @@ export default function VehicleCard({
           </Tooltip>
           <Tooltip title="Màu xe">
             <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
-              <ColorLensIcon fontSize="small" sx={{ color: color?.toLowerCase() || "#666" }} />
+              <ColorLensIcon
+                fontSize="small"
+                sx={{ color: color?.toLowerCase() || "#666" }}
+              />
               <Typography variant="body2">{color}</Typography>
             </Box>
           </Tooltip>

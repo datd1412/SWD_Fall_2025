@@ -11,36 +11,44 @@ import {
 } from "@mui/material";
 import VehicleCard from "../../components/VehicleCard";
 import { useNavigate } from "react-router-dom";
-import vehicleService from "../../../services/vehicleService";
+import staffService from "../../../services/staffService";
 
 export default function DashboardList() {
   const navigate = useNavigate();
   const [selectedStatus, setSelectedStatus] = React.useState("all");
   const [vehicles, setVehicles] = React.useState([]);
+  const [vehiclesSummary, setVehiclesSummary] = React.useState([]);
+  const [bookings, setBookings] = React.useState([]);
+  const [rentals, setRentals] = React.useState([]);
   const [loading, setLoading] = React.useState(false);
   const [error, setError] = React.useState(null);
 
   React.useEffect(() => {
-    const fetchVehicles = async () => {
+    const fetchDashboardData = async () => {
       try {
         setLoading(true);
-        const response = await vehicleService.getAllVehicles();
-        setVehicles(response.data);
+        const response = await staffService.getStaffDashboard();
+        if (response && response.vehicles) {
+          setVehiclesSummary(response.vehicles);
+        }
+        if (response && response.rentals) {
+          setRentals(response.rentals);
+        }
+        if (response && response.bookings) {
+          setBookings(response.bookings);
+        }
+        if (response && response.vehicleList) {
+          setVehicles(response.vehicleList);
+        }
       } catch (error) {
-        console.error("Error fetching vehicles:", error);
-        setError("Không thể tải danh sách xe");
+        console.error("Error fetching dashboard data:", error);
+        setError("Không thể tải dữ liệu bảng điều khiển");
       } finally {
         setLoading(false);
       }
-    };
-    fetchVehicles();
+    }
+    fetchDashboardData();
   }, []);
-
-  // const handleViewDetail = (vehicle) => {
-  //   navigate(`/dashboard/check-in/${encodeURIComponent(vehicle.licensePlate)}`, {
-  //     state: { vehicle },
-  //   });
-  // };
 
   const filteredVehicles = React.useMemo(() => {
     if (selectedStatus === "all") return vehicles;
@@ -59,18 +67,18 @@ export default function DashboardList() {
   }, [selectedStatus, vehicles]);
 
   const stats = React.useMemo(() => {
-    const ready = vehicles.filter((v) => v.status === "Available").length;
-    const booked = vehicles.filter((v) => v.status === "Booked").length;
-    const rented = vehicles.filter((v) => v.status === "InUse").length;
-    const maintenance = vehicles.filter((v) => v.status === "Damaged" || v.status === "Maintenance").length;
+    const ready = vehiclesSummary.available;
+    const booked = vehiclesSummary.booked;
+    const rented = vehiclesSummary.inUse;
+    const maintenance = vehiclesSummary.total - (ready + booked + rented);
     return [
       { title: "Xe sẵn sàng", value: ready },
       { title: "Đã đặt trước", value: booked },
       { title: "Đang cho thuê", value: rented },
       { title: "Đang bảo trì", value: maintenance },
-      { title: "Tổng số xe", value: vehicles.length },
+      { title: "Tổng số xe", value: vehiclesSummary.total },
     ];
-  }, [vehicles]);
+  }, [vehiclesSummary]);
 
    return (
     <Box>
