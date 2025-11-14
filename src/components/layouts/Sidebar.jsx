@@ -11,7 +11,6 @@ import {
   Button,
   Stack,
 } from "@mui/material";
-import DirectionsCarIcon from "@mui/icons-material/DirectionsCar";
 import HomeIcon from "@mui/icons-material/Home";
 import ReceiptIcon from "@mui/icons-material/Receipt";
 import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
@@ -33,12 +32,12 @@ const menuItems = [
 ];
 
 export default function Sidebar({ drawerWidth = 260 }) {
+  const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
 
   const handleLogout = () => {
-    // Implement logout logic here
     logout();
     localStorage.clear();
     console.log("Logout clicked");
@@ -105,10 +104,10 @@ export default function Sidebar({ drawerWidth = 260 }) {
           </Avatar>
           <Box>
             <Typography fontWeight={600} fontSize={15} color="#222">
-              Nguyễn Văn A
+              {user.fullName}
             </Typography>
             <Typography fontSize={13} color="text.secondary">
-              Chi nhánh Quận 1
+              Chi nhánh Quận {user.stationId}
             </Typography>
           </Box>
         </Box>

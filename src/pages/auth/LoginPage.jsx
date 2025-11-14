@@ -22,30 +22,72 @@ import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
 import { useUserStore } from "../../stores/userStore";
 import { Navigate } from "react-router-dom";
+import { useForm, Controller } from "react-hook-form";
+import * as yup from "yup";
+import { yupResolver } from "@hookform/resolvers/yup";
 import authService from "../../../services/authService";
-import { dismissToast, showError, showLoading, showSuccess } from "../../utils/toast";
+import {
+  dismissToast,
+  showError,
+  showLoading,
+  showSuccess,
+} from "../../utils/toast";
+
+const loginSchema = yup.object({
+  email: yup.string().email("Email không hợp lệ").required("Email bắt buộc"),
+  password: yup
+    .string()
+    .min(6, "Mật khẩu ít nhất 6 ký tự")
+    .required("Mật khẩu bắt buộc"),
+});
 
 export default function LoginPage() {
-  const [email, setEmail] = React.useState("");
-  const [password, setPassword] = React.useState("");
   const [showPassword, setShowPassword] = React.useState(false);
   const login = useUserStore((state) => state.login);
   const token = useUserStore((state) => state.token);
 
-  const handleSubmit = async (e) => {
-    e.preventDefault();
+  const {
+    handleSubmit,
+    control,
+    formState: { errors },
+  } = useForm({
+    resolver: yupResolver(loginSchema),
+    defaultValues: {
+      email: "",
+      password: "",
+    },
+  });
+
+  const onSubmit = async (data) => {
     try {
       const toastId = showLoading("Đang đăng nhập...");
-      const response = await authService.login(email, password);
+      const response = await authService.login(data.email, data.password);
       dismissToast(toastId);
+
       if (response) {
         login(response, response.token);
       }
+
       showSuccess("Đăng nhập thành công");
     } catch (error) {
       showError(error.errors?.Email || "Đăng nhập thất bại");
     }
   };
+
+  // const handleSubmit = async (e) => {
+  //   e.preventDefault();
+  //   try {
+  //     const toastId = showLoading("Đang đăng nhập...");
+  //     const response = await authService.login(email, password);
+  //     dismissToast(toastId);
+  //     if (response) {
+  //       login(response, response.token);
+  //     }
+  //     showSuccess("Đăng nhập thành công");
+  //   } catch (error) {
+  //     showError(error.errors?.Email || "Đăng nhập thất bại");
+  //   }
+  // };
 
   if (token) {
     return <Navigate to="/dashboard" replace />;
@@ -138,69 +180,71 @@ export default function LoginPage() {
                 Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.
               </Typography>
 
-              <Box component="form" onSubmit={handleSubmit} noValidate>
-                <TextField
-                  fullWidth
-                  label="Email"
-                  placeholder="staff@example.com"
-                  margin="normal"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#2fb56c",
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2fb56c",
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <EmailIcon color="action" />
-                      </InputAdornment>
-                    ),
-                  }}
+              <Box
+                component="form"
+                onSubmit={handleSubmit(onSubmit)}
+                noValidate
+              >
+                {/* Email */}
+                <Controller
+                  name="email"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Email"
+                      placeholder="staff@example.com"
+                      margin="normal"
+                      error={!!errors.email}
+                      helperText={errors.email?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <EmailIcon color="action" />
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
                 />
 
-                <TextField
-                  fullWidth
-                  label="Mật khẩu"
-                  placeholder="Nhập mật khẩu của bạn"
-                  margin="normal"
-                  type={showPassword ? "text" : "password"}
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                  sx={{
-                    "& .MuiOutlinedInput-root": {
-                      "&.Mui-focused fieldset": {
-                        borderColor: "#2fb56c",
-                      },
-                    },
-                    "& .MuiInputLabel-root.Mui-focused": {
-                      color: "#2fb56c",
-                    },
-                  }}
-                  InputProps={{
-                    startAdornment: (
-                      <InputAdornment position="start">
-                        <LockOutlinedIcon color="action" />
-                      </InputAdornment>
-                    ),
-                    endAdornment: (
-                      <InputAdornment position="end">
-                        <IconButton
-                          aria-label="toggle password visibility"
-                          edge="end"
-                          onClick={() => setShowPassword((s) => !s)}
-                        >
-                          {showPassword ? <VisibilityOff /> : <Visibility />}
-                        </IconButton>
-                      </InputAdornment>
-                    ),
-                  }}
+                {/* Password */}
+                <Controller
+                  name="password"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Mật khẩu"
+                      placeholder="Nhập mật khẩu của bạn"
+                      margin="normal"
+                      type={showPassword ? "text" : "password"}
+                      error={!!errors.password}
+                      helperText={errors.password?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlinedIcon color="action" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton
+                              onClick={() => setShowPassword((s) => !s)}
+                            >
+                              {showPassword ? (
+                                <VisibilityOff />
+                              ) : (
+                                <Visibility />
+                              )}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
                 />
 
                 <Box
@@ -240,19 +284,6 @@ export default function LoginPage() {
                   Đăng nhập
                 </Button>
               </Box>
-
-              {/* <Box sx={{ mt: 3 }}>
-								<Paper variant="outlined" sx={{ bgcolor: '#e9fbef', p: 2, borderRadius: 2 }}>
-									<Stack direction="row" spacing={2} alignItems="center">
-										<InfoOutlined color="action" />
-										<Box>
-											<Typography variant="subtitle2" fontWeight={600}>Tài khoản demo</Typography>
-											<Typography variant="body2">Email: staff@station1.com</Typography>
-											<Typography variant="body2">Mật khẩu: 123456</Typography>
-										</Box>
-									</Stack>
-								</Paper>
-							</Box> */}
 
               <Divider sx={{ my: 3 }} />
 

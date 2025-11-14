@@ -2,9 +2,11 @@ import React from 'react';
 import { Box, Stack, IconButton, Typography, Avatar } from '@mui/material';
 import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import { useNavigate, useLocation, useParams, Outlet } from 'react-router-dom';
+import { useUserStore } from '../../stores/userStore';
 
 export default function CheckingLayout() {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
   const location = useLocation();
   const params = useParams();
 
@@ -50,7 +52,7 @@ export default function CheckingLayout() {
             </Box>
           </Stack>
           <Stack direction="row" alignItems="center" spacing={2}>
-            <Typography variant="body2" color="text.secondary">Nhân viên: Nguyễn Văn A</Typography>
+            <Typography variant="body2" color="text.secondary">Nhân viên: {user.fullName}</Typography>
             <Avatar sx={{ bgcolor: '#b2e5c2' }}>NA</Avatar>
           </Stack>
         </Stack>

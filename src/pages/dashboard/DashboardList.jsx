@@ -46,7 +46,7 @@ export default function DashboardList() {
       } finally {
         setLoading(false);
       }
-    }
+    };
     fetchDashboardData();
   }, []);
 
@@ -80,7 +80,27 @@ export default function DashboardList() {
     ];
   }, [vehiclesSummary]);
 
-   return (
+  if (error)
+    return (
+      <Box
+        sx={{
+          display: "flex",
+          flexDirection: "column",
+          justifyContent: "center",
+          alignItems: "center",
+          height: "60vh",
+          textAlign: "center",
+          px: 2,
+        }}
+      >
+        <Typography variant="h4" color="error" gutterBottom>
+          ⚠️ Lỗi
+        </Typography>
+        <Typography color="error">{error}</Typography>
+      </Box>
+    );
+
+  return (
     <Box>
       {/* Stats */}
       <Grid container spacing={2} mb={3}>
