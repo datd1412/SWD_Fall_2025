@@ -11,6 +11,7 @@ export default function CheckingLayout() {
   const params = useParams();
 
   const vehicle = location.state?.vehicle || { reservationId: params.vehicleId || '' };
+  console.log("CheckingLayout vehicle:", vehicle);
 
   const getPageInfo = () => {
     const path = location.pathname;
@@ -23,7 +24,7 @@ export default function CheckingLayout() {
     if (path.includes('/check-out')) {
       return {
         title: 'Chuẩn bị xe cho thuê',
-        subtitle: `Giao xe cho khách hàng - Rental #${vehicle.reservationId}`
+        subtitle: `Giao xe cho khách hàng - Rental #${vehicle.licensePlate}`
       };
     }
     return {

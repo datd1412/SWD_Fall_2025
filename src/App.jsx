@@ -76,7 +76,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/check-in",
-    element: <CheckingLayout />,
+    element: (
+      <ProtectedRoute>
+        <CheckingLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "return/:vehicleId",
@@ -103,7 +107,7 @@ const router = createBrowserRouter([
     element: <LoginPage />,
   },
   {
-    path: '/forgot-password',
+    path: "/forgot-password",
     element: <ForgotPasswordPage />,
   },
   {

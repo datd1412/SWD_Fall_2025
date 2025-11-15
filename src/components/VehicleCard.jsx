@@ -118,7 +118,7 @@ export default function VehicleCard({
 
   const handleCheckOut = () => {
     navigate(`/check-out/${encodeURIComponent(licensePlate)}`, {
-      state: { rentalInfo, vehicleProps },
+      state: { vehicle: vehicleData },
     });
   };
 

@@ -70,11 +70,7 @@ const ReturnInspectionPage = () => {
   const renterSigRef = useRef(null);
   const staffSigRef = useRef(null);
 
-  const {
-    handleSubmit,
-    control,
-    setValue,
-  } = useForm({
+  const { handleSubmit, control, setValue } = useForm({
     resolver: yupResolver(returnInspectionSchema),
     defaultValues: {
       odometerAfterReturn: rental ? rental.odometerAfterReturn || 0 : 0,
@@ -91,7 +87,9 @@ const ReturnInspectionPage = () => {
         trunkOk: false,
       },
       additionalFees: rentalFee ? rentalFee.additionalFees || 0 : 0,
-      additionalFeesReason: rentalFee ? rentalFee.additionalFeesReason || "" : "",
+      additionalFeesReason: rentalFee
+        ? rentalFee.additionalFeesReason || ""
+        : "",
     },
   });
 
@@ -138,28 +136,28 @@ const ReturnInspectionPage = () => {
     setLoading(true);
     setPageLoading(true);
     try {
+      const allChecked = Object.values(damageReport).every((v) => v === true);
       const payload = {
         ...data,
         rentalId: rental.id,
         additionalFees: rentalFee.additionalFees || 0,
         additionalFeesReason: rentalFee.additionalFeesReason || "",
-        damageReport: JSON.stringify(
-          Object.fromEntries(
-            Object.entries(damageReport).map(([k, v]) => [
-              k,
-              v ? "1" : "0",
-            ])
-          )
-        ),
-        returnImageUrls: images.filter(img => img !== null),
+        damageReport: allChecked
+          ? ""
+          : JSON.stringify(
+              Object.fromEntries(
+                Object.entries(damageReport).map(([k, v]) => [k, v ? "1" : "0"])
+              )
+            ),
+        returnImageUrls: images.filter((img) => img !== null),
       };
+      console.log("Payload to submit: ", payload);
       const toastId = showLoading("Đang xử lý...");
       const response = await rentalService.checkinRental(rental.id, payload);
       dismissToast(toastId);
       if (response.success) {
         showSuccess("Xác nhận trả xe thành công");
       }
-      console.log("Submit data: ", payload);
     } catch (error) {
       console.error(error);
     } finally {
@@ -739,7 +737,10 @@ const ReturnInspectionPage = () => {
                         },
                       }}
                       onEnd={() => {
-                        setValue("renterSignature", renterSigRef.current.toDataURL());
+                        setValue(
+                          "renterSignature",
+                          renterSigRef.current.toDataURL()
+                        );
                       }}
                     />
 
@@ -780,7 +781,10 @@ const ReturnInspectionPage = () => {
                         },
                       }}
                       onEnd={() => {
-                        setValue("staffSignature", staffSigRef.current.toDataURL());
+                        setValue(
+                          "staffSignature",
+                          staffSigRef.current.toDataURL()
+                        );
                       }}
                     />
 

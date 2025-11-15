@@ -23,9 +23,13 @@ import { useEffect, useRef, useState } from "react";
 import SignaturePad from "react-signature-canvas";
 import { useLocation, useNavigate, useParams } from "react-router-dom";
 import vehicleService from "../../services/vehicleService";
+import { useUserStore } from "../stores/userStore";
+import bookingService from "../../services/bookingService";
+import dayjs from "dayjs";
 
 export default function CheckoutPage() {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
   const location = useLocation();
   const params = useParams();
   const vehicle = location.state?.vehicle || {
@@ -45,6 +49,8 @@ export default function CheckoutPage() {
   const [images, setImages] = useState(Array(2).fill(null));
   const [previews, setPreviews] = useState(Array(2).fill(""));
   const [submitting, setSubmitting] = useState(false);
+  const [loading, setLoading] = useState(false);
+  const [booking, setBooking] = useState(null);
   const [snack, setSnack] = useState({
     open: false,
     msg: "",
@@ -55,8 +61,53 @@ export default function CheckoutPage() {
   const [notesValue, setNotesValue] = useState("");
   const [renterSignature, setRenterSignature] = useState("");
   const [staffSignature, setStaffSignature] = useState("");
-  const renterPad = useRef(null);
-  const staffPad = useRef(null);
+  const renterPad = useRef("");
+  const staffPad = useRef("");
+
+  const saveRenterSignature = () => {
+    if (!renterPad.current) return;
+    setRenterSignature(renterPad.current.getCanvas().toDataURL("image/png"));
+  };
+
+  // Lưu chữ ký nhân viên
+  const saveStaffSignature = () => {
+    if (!staffPad.current) return;
+    setStaffSignature(staffPad.current.getCanvas().toDataURL("image/png"));
+  };
+
+  // Xóa chữ ký người thuê
+  const clearRenterSignature = () => {
+    if (!renterPad.current) return;
+    renterPad.current.clear();
+    setRenterSignature("");
+  };
+
+  // Xóa chữ ký nhân viên
+  const clearStaffSignature = () => {
+    if (!staffPad.current) return;
+    staffPad.current.clear();
+    setStaffSignature("");
+  };
+
+  useEffect(() => {
+    const fetchBooking = async () => {
+      try {
+        if (vehicle && vehicle.booking) {
+          setLoading(true);
+          const response = await bookingService.getBookingById(
+            vehicle.booking.id
+          );
+          setBooking(response);
+          console.log(response);
+        }
+      } catch (error) {
+        console.error(error);
+      } finally {
+        setLoading(false);
+      }
+    };
+    fetchBooking();
+  }, []);
 
   const handleFileChange = (index, e) => {
     const file = e.target.files && e.target.files[0];
@@ -103,23 +154,38 @@ export default function CheckoutPage() {
     };
   }, [previews]);
 
+  const toDataURL = (file) => {
+    return new Promise((resolve) => {
+      const reader = new FileReader();
+      reader.onload = () => resolve(reader.result);
+      reader.readAsDataURL(file);
+    });
+  };
+
+  const handleBack = () => {
+    navigate(-1);
+  };
+
   const handleSubmit = async () => {
-    const missing = images.some((i) => !i);
-    if (missing) {
+    const missingImages = images.some((i) => !i);
+    const missingSignatures = !renterSignature || !staffSignature;
+    if (missingImages || missingSignatures) {
       setSnack({
         open: true,
-        msg: "Vui lòng chụp đủ 2 ảnh trước khi xác nhận",
+        msg: "Vui lòng chụp đủ 2 ảnh và ký đủ 2 chữ ký trước khi xác nhận",
         severity: "error",
       });
       return;
     }
 
     const state = location.state || {};
-    const bookingId = state.booking?.id || 0;
-    const userId = state.booking?.customerId || state.rental?.customerId || 0;
-    const vehicleId = state.id || state.raw?.id || 0;
+    const bookingId = booking?.id || 0;
+    const userId = state.vehicle.booking?.customerId || 0;
+    const vehicleId = state.vehicle.id || 0;
 
-    const pickupImageUrls = previews.map((p, i) => `image_slot_${i + 1}.jpg`);
+    const pickupImageUrls = await Promise.all(
+      images.map((img) => (img ? toDataURL(img) : Promise.resolve("")))
+    );
 
     const payload = {
       bookingId: bookingId,
@@ -136,7 +202,6 @@ export default function CheckoutPage() {
     try {
       setSubmitting(true);
       const res = await vehicleService.checkoutRental(payload);
-      console.log("checkout response:", res);
       console.log(
         "checkout typeof:",
         typeof res,
@@ -201,6 +266,7 @@ export default function CheckoutPage() {
       });
     } finally {
       setSubmitting(false);
+      handleBack();
     }
   };
 
@@ -215,7 +281,7 @@ export default function CheckoutPage() {
               component="div"
               sx={{
                 height: 180,
-                bgcolor: "linear-gradient(135deg,#A7F3D0,#6EE7B7)",
+                background: "linear-gradient(135deg,#A7F3D0,#6EE7B7)",
                 display: "flex",
                 alignItems: "center",
                 justifyContent: "center",
@@ -250,7 +316,7 @@ export default function CheckoutPage() {
               {vehicle.name}
             </Typography>
             <Typography variant="body2" color="text.secondary">
-              Biển số: {vehicle.license}
+              Biển số: {vehicle.licensePlate}
             </Typography>
 
             <Stack spacing={1} mt={2}>
@@ -258,28 +324,30 @@ export default function CheckoutPage() {
                 Loại xe
               </Typography>
               <Typography variant="body1" fontWeight={600}>
-                {vehicle.type}
+                {vehicle.brand} - {vehicle.year}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" mt={1}>
                 Nhân viên giao xe
               </Typography>
               <Typography variant="body1" fontWeight={600}>
-                Nguyễn Văn A
+                {user?.fullName || "Nhân viên không xác định"}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" mt={1}>
                 Khách thuê
               </Typography>
               <Typography variant="body1" fontWeight={600}>
-                {vehicle.customer}
+                {vehicle.booking.customerName || "Khách không xác định"}
               </Typography>
 
               <Typography variant="body2" color="text.secondary" mt={1}>
                 Thời gian
               </Typography>
               <Typography variant="body1" fontWeight={600}>
-                {vehicle.start} - {vehicle.end}
+                {dayjs(booking?.scheduledPickupTime).format("HH:mm DD/MM/YYYY")}{" "}
+                -{" "}
+                {dayjs(booking?.scheduledReturnTime).format("HH:mm DD/MM/YYYY")}
               </Typography>
             </Stack>
           </CardContent>
@@ -292,7 +360,7 @@ export default function CheckoutPage() {
             <Box>
               <Paper sx={{ p: 2, bgcolor: "#fff6", borderRadius: 2, mb: 2 }}>
                 <Typography variant="body2" color="error">
-                  Bạn có đơn thuê sắp theo vào {vehicle.start} - Vui lòng hoàn
+                  Bạn có đơn thuê tiếp theo vào {vehicle.start} - Vui lòng hoàn
                   thành giao xe trước thời gian này
                 </Typography>
               </Paper>
@@ -434,6 +502,7 @@ export default function CheckoutPage() {
                 Chờ ký xác nhận
               </Typography>
               <Grid container spacing={2}>
+                {/* Người thuê */}
                 <Grid item xs={12} md={6}>
                   <Paper sx={{ minHeight: 160, borderRadius: 2, p: 2 }}>
                     <Typography variant="body2" color="text.secondary" mb={1}>
@@ -466,28 +535,10 @@ export default function CheckoutPage() {
                         alignItems: "center",
                       }}
                     >
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          if (!renterPad.current) return;
-                          renterPad.current.clear();
-                          setRenterSignature("");
-                        }}
-                      >
+                      <Button size="small" onClick={clearRenterSignature}>
                         Xóa
                       </Button>
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          if (!renterPad.current) return;
-                          const dataUrl = renterPad.current
-                            .getTrimmedCanvas()
-                            .toDataURL("image/png");
-                          setRenterSignature(dataUrl);
-                        }}
-                      >
-                        Lưu chữ ký
-                      </Button>
+                      <Button onClick={saveRenterSignature}>LƯU CHỮ KÝ</Button>
                       {renterSignature && (
                         <Box
                           component="img"
@@ -498,6 +549,8 @@ export default function CheckoutPage() {
                     </Box>
                   </Paper>
                 </Grid>
+
+                {/* Nhân viên */}
                 <Grid item xs={12} md={6}>
                   <Paper sx={{ minHeight: 160, borderRadius: 2, p: 2 }}>
                     <Typography variant="body2" color="text.secondary" mb={1}>
@@ -530,28 +583,10 @@ export default function CheckoutPage() {
                         alignItems: "center",
                       }}
                     >
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          if (!staffPad.current) return;
-                          staffPad.current.clear();
-                          setStaffSignature("");
-                        }}
-                      >
+                      <Button size="small" onClick={clearStaffSignature}>
                         Xóa
                       </Button>
-                      <Button
-                        size="small"
-                        onClick={() => {
-                          if (!staffPad.current) return;
-                          const dataUrl = staffPad.current
-                            .getTrimmedCanvas()
-                            .toDataURL("image/png");
-                          setStaffSignature(dataUrl);
-                        }}
-                      >
-                        Lưu chữ ký
-                      </Button>
+                      <Button onClick={saveStaffSignature}>LƯU CHỮ KÝ</Button>
                       {staffSignature && (
                         <Box
                           component="img"
