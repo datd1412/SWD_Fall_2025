@@ -36,7 +36,13 @@ const returnInspectionSchema = yup.object({
   totalDistance: yup
     .number()
     .positive("Tổng quãng đường phải lớn hơn 0")
-    .required("Tổng quãng đường bắt buộc"),
+    .required("Tổng quãng đường bắt buộc")
+    .when('odometerAfterReturn', (odometerAfterReturn, schema) => {
+      if (odometerAfterReturn) {
+        return schema.max(odometerAfterReturn, "Tổng quãng đường không được lớn hơn ODO");
+      }
+      return schema;
+    }),
   returnNotes: yup.string().optional(),
   renterSignature: yup.string().required("Chữ ký người thuê bắt buộc"),
   staffSignature: yup.string().required("Chữ ký nhân viên bắt buộc"),
@@ -70,7 +76,7 @@ const ReturnInspectionPage = () => {
   const renterSigRef = useRef(null);
   const staffSigRef = useRef(null);
 
-  const { handleSubmit, control, setValue } = useForm({
+  const { handleSubmit, control, setValue, formState: { errors } } = useForm({
     resolver: yupResolver(returnInspectionSchema),
     defaultValues: {
       odometerAfterReturn: rental ? rental.odometerAfterReturn || 0 : 0,
@@ -499,7 +505,13 @@ const ReturnInspectionPage = () => {
                       value={formValues.odometerAfterReturn}
                       onChange={handleInputChange("odometerAfterReturn")}
                       variant="outlined"
+                      error={!!errors.odometerAfterReturn}
                     />
+                    {errors.odometerAfterReturn && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {errors.odometerAfterReturn.message}
+                      </Typography>
+                    )}
                   </Box>
                   <Box>
                     <Typography
@@ -524,7 +536,13 @@ const ReturnInspectionPage = () => {
                         });
                       }}
                       variant="outlined"
+                      error={!!errors.returnBatteryLevel}
                     />
+                    {errors.returnBatteryLevel && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {errors.returnBatteryLevel.message}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
                 <Typography
@@ -569,7 +587,13 @@ const ReturnInspectionPage = () => {
                       value={formValues.totalDistance}
                       onChange={handleInputChange("totalDistance")}
                       variant="outlined"
+                      error={!!errors.totalDistance}
                     />
+                    {errors.totalDistance && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {errors.totalDistance.message}
+                      </Typography>
+                    )}
                   </Box>
                   <Box>
                     <Typography
@@ -732,7 +756,7 @@ const ReturnInspectionPage = () => {
                         width: 300,
                         height: 150,
                         style: {
-                          border: "1px solid #ddd",
+                          border: errors.renterSignature ? "1px solid #d32f2f" : "1px solid #ddd",
                           borderRadius: "8px",
                         },
                       }}
@@ -754,6 +778,11 @@ const ReturnInspectionPage = () => {
                     >
                       Xóa chữ ký
                     </Button>
+                    {errors.renterSignature && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {errors.renterSignature.message}
+                      </Typography>
+                    )}
                   </Box>
 
                   {/* Chữ ký nhân viên */}
@@ -776,7 +805,7 @@ const ReturnInspectionPage = () => {
                         width: 300,
                         height: 150,
                         style: {
-                          border: "1px solid #ddd",
+                          border: errors.staffSignature ? "1px solid #d32f2f" : "1px solid #ddd",
                           borderRadius: "8px",
                         },
                       }}
@@ -798,6 +827,11 @@ const ReturnInspectionPage = () => {
                     >
                       Xóa chữ ký
                     </Button>
+                    {errors.staffSignature && (
+                      <Typography variant="caption" color="error" sx={{ mt: 0.5 }}>
+                        {errors.staffSignature.message}
+                      </Typography>
+                    )}
                   </Box>
                 </Box>
               </Box>

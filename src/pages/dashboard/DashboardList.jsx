@@ -67,16 +67,19 @@ export default function DashboardList() {
   }, [selectedStatus, vehicles]);
 
   const stats = React.useMemo(() => {
-    const ready = vehiclesSummary.available;
-    const booked = vehiclesSummary.booked;
-    const rented = vehiclesSummary.inUse;
-    const maintenance = vehiclesSummary.total - (ready + booked + rented);
+    const ready = vehiclesSummary?.available ?? 0;
+    const booked = vehiclesSummary?.booked ?? 0;
+    const rented = vehiclesSummary?.inUse ?? 0;
+    const total = vehiclesSummary?.total ?? 0;
+
+    const maintenance = total - (ready + booked + rented);
+
     return [
       { title: "Xe sẵn sàng", value: ready },
       { title: "Đã đặt trước", value: booked },
       { title: "Đang cho thuê", value: rented },
       { title: "Đang bảo trì", value: maintenance },
-      { title: "Tổng số xe", value: vehiclesSummary.total },
+      { title: "Tổng số xe", value: total },
     ];
   }, [vehiclesSummary]);
 
