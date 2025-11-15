@@ -1,24 +1,25 @@
+import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import HistoryIcon from "@mui/icons-material/History";
+import HomeIcon from "@mui/icons-material/Home";
+import LogoutIcon from "@mui/icons-material/Logout";
+import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
+import ReceiptIcon from "@mui/icons-material/Receipt";
 import {
-  Drawer,
-  Box,
-  Typography,
   Avatar,
+  Box,
+  Button,
+  Divider,
+  Drawer,
   List,
   ListItemButton,
   ListItemIcon,
   ListItemText,
-  Divider,
-  Button,
-  Stack,
+  Typography,
 } from "@mui/material";
-import HomeIcon from "@mui/icons-material/Home";
-import ReceiptIcon from "@mui/icons-material/Receipt";
-import PeopleAltIcon from "@mui/icons-material/PeopleAlt";
-import HistoryIcon from "@mui/icons-material/History";
-import LogoutIcon from "@mui/icons-material/Logout";
-import ElectricBoltIcon from "@mui/icons-material/ElectricBolt";
+import React from "react";
+import { useLocation, useNavigate } from "react-router-dom";
+import authService from "../../../services/authService";
 import { useUserStore } from "../../stores/userStore";
-import { useNavigate, useLocation } from "react-router-dom";
 
 const menuItems = [
   { text: "Dashboard", icon: <HomeIcon />, path: "/dashboard" },
@@ -36,10 +37,36 @@ export default function Sidebar({ drawerWidth = 260 }) {
   const logout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
+  const [userProfile, setUserProfile] = React.useState(null);
+
+  React.useEffect(() => {
+    const fetchUserProfile = async () => {
+      try {
+        const response = await authService.getUserProfile();
+        // response.data chính là object user luôn
+        if (response) {
+          setUserProfile(response);
+        }
+      } catch (error) {
+        console.error("Error fetching user profile:", error);
+      }
+    };
+    fetchUserProfile();
+  }, []);
 
   const handleLogout = () => {
     logout();
     localStorage.clear();
+  };
+
+  // Lấy chữ cái đầu của tên để làm avatar
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   return (
@@ -99,14 +126,14 @@ export default function Sidebar({ drawerWidth = 260 }) {
               fontWeight: 700,
             }}
           >
-            NA
+            {userProfile ? getInitials(userProfile.fullName) : "NA"}
           </Avatar>
           <Box>
             <Typography fontWeight={600} fontSize={15} color="#222">
               {user ? user.fullName : "Người dùng"}
             </Typography>
             <Typography fontSize={13} color="text.secondary">
-              Chi nhánh Quận {user ? user.stationId : "..."}
+              {userProfile?.stationName || "Chi nhánh"}
             </Typography>
           </Box>
         </Box>

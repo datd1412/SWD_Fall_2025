@@ -21,6 +21,7 @@ import { dismissToast, showLoading, showSuccess } from "../utils/toast";
 import { useForm, Controller, useWatch } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
+import { useUserStore } from "../stores/userStore";
 
 const returnInspectionSchema = yup.object({
   odometerAfterReturn: yup
@@ -52,6 +53,7 @@ const returnInspectionSchema = yup.object({
 
 const ReturnInspectionPage = () => {
   const navigate = useNavigate();
+  const user = useUserStore((state) => state.user);
   const location = useLocation();
   const [pageLoading, setPageLoading] = useState(false);
   const [rental] = useState(location.state?.rentalInfo || null);
@@ -285,7 +287,7 @@ const ReturnInspectionPage = () => {
                       fontWeight={500}
                       color="text.primary"
                     >
-                      Nguyễn Văn A
+                      {user.fullName}
                     </Typography>
                   </Box>
                   <Box

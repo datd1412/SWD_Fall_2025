@@ -1,17 +1,17 @@
-import React from "react";
 import {
   Box,
-  Grid,
-  Typography,
   Button,
   Card,
   CardContent,
-  Stack,
   CircularProgress,
+  Grid,
+  Stack,
+  Typography,
 } from "@mui/material";
-import VehicleCard from "../../components/VehicleCard";
+import React, { useEffect, useMemo, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import staffService from "../../../services/staffService";
+import VehicleCard from "../../components/VehicleCard";
 
 export default function DashboardList() {
   const navigate = useNavigate();
@@ -126,7 +126,6 @@ export default function DashboardList() {
         ))}
       </Grid>
 
-      {/* Bộ lọc */}
       <Stack direction="row" spacing={1.5} mb={3}>
         <Button
           variant={selectedStatus === "all" ? "contained" : "outlined"}
@@ -158,7 +157,6 @@ export default function DashboardList() {
         </Button>
       </Stack>
 
-      {/* Loading / Error / Danh sách xe */}
       {loading ? (
         <Box textAlign="center" mt={4}>
           <CircularProgress color="success" />
