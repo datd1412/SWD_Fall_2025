@@ -69,6 +69,16 @@ export default function Sidebar({ drawerWidth = 260 }) {
     return name.slice(0, 2).toUpperCase();
   };
 
+  // Lấy chữ cái đầu của tên để làm avatar
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
+  };
+
   return (
     <Drawer
       variant="permanent"
