@@ -2,10 +2,11 @@ import React, { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import {
   Box,
-  Button,
   Card,
   CardContent,
   CardMedia,
+  Typography,
+  Button,
   Chip,
   Divider,
   Tooltip,
@@ -151,18 +152,18 @@ export default function VehicleCard({
         sx={{
           position: "relative",
           width: "100%",
-          pt: "56.25%", // 16:9 Aspect Ratio
-          background: image
+          pt: "56.25%",
+          background: imageUrl
             ? "none"
             : "linear-gradient(135deg, #A7F3D0 0%, #6EE7B7 50%, #34D399 100%)",
           overflow: "hidden",
         }}
       >
-        {image ? (
+        {imageUrl ? (
           <CardMedia
             component="img"
-            src={image}
-            alt={name}
+            src={imageUrl}
+            alt={model}
             sx={{
               position: "absolute",
               top: 0,
@@ -192,7 +193,7 @@ export default function VehicleCard({
 
       {/* Chip trạng thái */}
       <Chip
-        label={status}
+        label={displayStatus}
         color={statusColor}
         size="small"
         sx={{
@@ -224,7 +225,7 @@ export default function VehicleCard({
             whiteSpace: "nowrap",
           }}
         >
-          {name}
+          {brand} {model}
         </Typography>
 
         {/* Biển số + năm + màu */}
@@ -261,13 +262,11 @@ export default function VehicleCard({
         <Box sx={{ display: "flex", alignItems: "center", gap: 2, mb: 1 }}>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <ElectricBoltIcon fontSize="small" color="success" />
-            <Typography variant="body2">{battery}%</Typography>
+            <Typography variant="body2">{batteryCapacity}%</Typography>
           </Box>
           <Box sx={{ display: "flex", alignItems: "center", gap: 0.5 }}>
             <SpeedIcon fontSize="small" color="action" />
-            <Typography variant="body2">
-              {Number(mileage).toLocaleString()} km
-            </Typography>
+            <Typography variant="body2">{stationName}</Typography>
           </Box>
         </Box>
 
