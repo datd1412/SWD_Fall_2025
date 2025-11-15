@@ -23,6 +23,7 @@ import React from "react";
 import { useLocation, useNavigate } from "react-router-dom";
 import { useUserStore } from "../../stores/userStore";
 import authService from "../../../services/authService";
+import ConfirmModal from "../ConfirmModal";
 
 const today = new Date();
 const dayOfWeek = [
@@ -46,6 +47,7 @@ export default function Header({ drawerWidth = 260 }) {
   const open = Boolean(anchorEl);
   const location = useLocation();
   const [userProfile, setUserProfile] = React.useState(null);
+  const [logoutModalOpen, setLogoutModalOpen] = React.useState(false);
   const logout = useUserStore((state) => state.logout);
 
   React.useEffect(() => {
@@ -125,10 +127,16 @@ export default function Header({ drawerWidth = 260 }) {
     handleClose();
   };
 
-  const handleLogout = () => {
+  const handleLogoutClick = () => {
+    setLogoutModalOpen(true);
+    handleClose();
+  };
+
+  const handleLogoutConfirm = () => {
     logout();
     localStorage.clear();
-  }
+    setLogoutModalOpen(false);
+  };
 
   return (
     <AppBar
@@ -298,12 +306,24 @@ export default function Header({ drawerWidth = 260 }) {
             <ListItemIcon>
               <LogoutIcon fontSize="small" color="action" />
             </ListItemIcon>
-            <Typography variant="body2" onClick={handleLogout}>
+            <Typography variant="body2" onClick={handleLogoutClick}>
               Đăng xuất
             </Typography>
           </MenuItem>
         </Menu>
       </Toolbar>
+
+      {/* Logout Confirmation Modal */}
+      <ConfirmModal
+        open={logoutModalOpen}
+        onClose={() => setLogoutModalOpen(false)}
+        onConfirm={handleLogoutConfirm}
+        title="Xác nhận đăng xuất"
+        message="Bạn có chắc chắn muốn đăng xuất khỏi hệ thống?"
+        confirmText="Đăng xuất"
+        cancelText="Hủy"
+        confirmColor="error"
+      />
     </AppBar>
   );
 }

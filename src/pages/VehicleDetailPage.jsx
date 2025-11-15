@@ -153,7 +153,7 @@ export default function VehicleDetailPage() {
     Damaged: {
       label: "Hư hỏng",
       color: "#9e9e9e",
-      buttonText: "Xe hư hỏng",
+      buttonText: "Xe đang sửa chữa",
       navigateTo: "",
     },
   };
@@ -394,7 +394,7 @@ export default function VehicleDetailPage() {
                   <Button
                     variant="outlined"
                     fullWidth
-                    onClick={() => navigate("/dashboard")}
+                    onClick={() => navigate(-1)}
                     sx={{
                       height: 48,
                       borderRadius: 2,
