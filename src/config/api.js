@@ -2,10 +2,8 @@ import axios from "axios";
 import { useUserStore } from "../stores/userStore";
 
 const api = axios.create({
-  baseURL:
-    import.meta.env.VITE_API_URL ||
-    "https://swdbackendgroup5-production.up.railway.app/api",
-  timeout: 5000,
+  baseURL: import.meta.env.VITE_API_URL || 'http://localhost:3000/api',
+  timeout: 10000,
   headers: {
     "Content-Type": "application/json",
   },

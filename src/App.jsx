@@ -16,6 +16,8 @@ import CheckingLayout from "./components/layouts/CheckingLayout";
 import ErrorPage from "./pages/ErrorPage";
 import HistoryPage from "./pages/HistoryPage";
 import ToastProvider from "./components/providers/ToastProvider";
+import ForgotPasswordPage from "./pages/auth/ForgotPassword";
+import ResetPasswordPage from "./pages/auth/ResetPassword";
 
 const ProtectedRoute = ({ children }) => {
   const { token } = useUserStore();
@@ -69,7 +71,11 @@ const router = createBrowserRouter([
   },
   {
     path: "/check-in",
-    element: <CheckingLayout />,
+    element: (
+      <ProtectedRoute>
+        <CheckingLayout />
+      </ProtectedRoute>
+    ),
     children: [
       {
         path: "return/:vehicleId",
@@ -94,6 +100,14 @@ const router = createBrowserRouter([
   {
     path: "/login",
     element: <LoginPage />,
+  },
+  {
+    path: "/forgot-password",
+    element: <ForgotPasswordPage />,
+  },
+  {
+    path: "/reset-password/:token",
+    element: <ResetPasswordPage />,
   },
   {
     path: "*",

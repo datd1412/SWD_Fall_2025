@@ -33,6 +33,7 @@ const menuItems = [
 ];
 
 export default function Sidebar({ drawerWidth = 260 }) {
+  const user = useUserStore((state) => state.user);
   const logout = useUserStore((state) => state.logout);
   const navigate = useNavigate();
   const location = useLocation();
@@ -54,10 +55,18 @@ export default function Sidebar({ drawerWidth = 260 }) {
   }, []);
 
   const handleLogout = () => {
-    // Implement logout logic here
     logout();
     localStorage.clear();
-    console.log("Logout clicked");
+  };
+
+  // Lấy chữ cái đầu của tên để làm avatar
+  const getInitials = (name) => {
+    if (!name) return "?";
+    const parts = name.split(" ");
+    if (parts.length >= 2) {
+      return (parts[0][0] + parts[parts.length - 1][0]).toUpperCase();
+    }
+    return name.slice(0, 2).toUpperCase();
   };
 
   // Lấy chữ cái đầu của tên để làm avatar
@@ -131,7 +140,7 @@ export default function Sidebar({ drawerWidth = 260 }) {
           </Avatar>
           <Box>
             <Typography fontWeight={600} fontSize={15} color="#222">
-              {userProfile?.fullName || "Đang tải..."}
+              {user ? user.fullName : "Người dùng"}
             </Typography>
             <Typography fontSize={13} color="text.secondary">
               {userProfile?.stationName || "Chi nhánh"}

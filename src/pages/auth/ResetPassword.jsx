@@ -8,75 +8,58 @@ import {
   InputAdornment,
   IconButton,
   Button,
-  Checkbox,
-  FormControlLabel,
   Link,
   Avatar,
   Stack,
   Divider,
 } from "@mui/material";
 import BoltIcon from "@mui/icons-material/Bolt";
-import EmailIcon from "@mui/icons-material/Email";
 import LockOutlinedIcon from "@mui/icons-material/LockOutlined";
 import Visibility from "@mui/icons-material/Visibility";
 import VisibilityOff from "@mui/icons-material/VisibilityOff";
-import { useUserStore } from "../../stores/userStore";
-import { Navigate } from "react-router-dom";
 import { useForm, Controller } from "react-hook-form";
 import * as yup from "yup";
 import { yupResolver } from "@hookform/resolvers/yup";
 import authService from "../../../services/authService";
-import {
-  dismissToast,
-  showError,
-  showLoading,
-  showSuccess,
-} from "../../utils/toast";
+import { showError, showLoading, showSuccess, dismissToast } from "../../utils/toast";
 
-const loginSchema = yup.object({
-  email: yup.string().email("Email không hợp lệ").required("Email bắt buộc"),
-  password: yup
+const resetSchema = yup.object({
+  password: yup.string().min(6, "Mật khẩu ít nhất 6 ký tự").required("Mật khẩu bắt buộc"),
+  confirmPassword: yup
     .string()
-    .min(6, "Mật khẩu ít nhất 6 ký tự")
-    .required("Mật khẩu bắt buộc"),
+    .oneOf([yup.ref("password"), null], "Mật khẩu không trùng khớp")
+    .required("Xác nhận mật khẩu bắt buộc"),
 });
 
-export default function LoginPage() {
-  const [showPassword, setShowPassword] = React.useState(false);
-  const login = useUserStore((state) => state.login);
-  const token = useUserStore((state) => state.token);
+export default function ResetPasswordPage() {
+  const [showPw1, setShowPw1] = React.useState(false);
+  const [showPw2, setShowPw2] = React.useState(false);
 
   const {
     handleSubmit,
     control,
     formState: { errors },
   } = useForm({
-    resolver: yupResolver(loginSchema),
+    resolver: yupResolver(resetSchema),
     defaultValues: {
-      email: "",
       password: "",
+      confirmPassword: "",
     },
   });
 
   const onSubmit = async (data) => {
     try {
-      const toastId = showLoading("Đang đăng nhập...");
-      const response = await authService.login(data.email, data.password);
+      const toastId = showLoading("Đang cập nhật mật khẩu...");
+      const response = await authService.resetPassword(data.password);
       dismissToast(toastId);
 
       if (response) {
-        login(response, response.token);
+        showSuccess("Đặt lại mật khẩu thành công!");
       }
-
-      showSuccess("Đăng nhập thành công");
     } catch (error) {
-      showError(error.errors?.Email || "Đăng nhập thất bại");
+      showError(error.errors?.Password || "Đặt lại mật khẩu thất bại");
     }
   };
-
-  if (token) {
-    return <Navigate to="/dashboard" replace />;
-  }
 
   return (
     <Box
@@ -91,15 +74,10 @@ export default function LoginPage() {
     >
       <Paper
         elevation={6}
-        sx={{
-          width: "100%",
-          maxWidth: 1100,
-          borderRadius: 3,
-          overflow: "hidden",
-        }}
+        sx={{ width: "100%", maxWidth: 1100, borderRadius: 3, overflow: "hidden" }}
       >
-        <Grid container sx={{ flex: 1 }}>
-          {/* Left info panel */}
+        <Grid container>
+          {/* Left panel */}
           <Grid
             item
             xs={12}
@@ -115,12 +93,7 @@ export default function LoginPage() {
           >
             <Box sx={{ maxWidth: 360 }}>
               <Avatar
-                sx={{
-                  bgcolor: "rgba(255,255,255,0.12)",
-                  width: 72,
-                  height: 72,
-                  mb: 3,
-                }}
+                sx={{ bgcolor: "rgba(255,255,255,0.12)", width: 72, height: 72, mb: 3 }}
               >
                 <BoltIcon sx={{ color: "white", fontSize: 34 }} />
               </Avatar>
@@ -133,67 +106,24 @@ export default function LoginPage() {
               </Typography>
 
               <Stack spacing={1.2}>
-                <Typography variant="body2">
-                  • Quản lý giao nhận xe nhanh chóng
-                </Typography>
-                <Typography variant="body2">
-                  • Theo dõi tình trạng xe real-time
-                </Typography>
-                <Typography variant="body2">
-                  • Chữ ký điện tử và lưu trữ ảnh
-                </Typography>
+                <Typography variant="body2">• Quản lý giao nhận xe nhanh chóng</Typography>
+                <Typography variant="body2">• Theo dõi tình trạng xe real-time</Typography>
+                <Typography variant="body2">• Chữ ký điện tử và lưu trữ ảnh</Typography>
               </Stack>
             </Box>
           </Grid>
 
           {/* Right form panel */}
-          <Grid
-            item
-            xs={12}
-            md={6}
-            sx={{
-              p: { xs: 4, md: 6 },
-              background: "white",
-              flexGrow: 1,
-            }}
-          >
+          <Grid item xs={12} md={6} sx={{ p: { xs: 4, md: 6 }, background: "white" }}>
             <Box sx={{ maxWidth: 460, mx: "auto" }}>
               <Typography variant="h4" fontWeight={700} sx={{ mb: 1 }}>
-                Đăng nhập
+                Đặt lại mật khẩu
               </Typography>
               <Typography variant="body2" color="text.secondary" sx={{ mb: 3 }}>
-                Chào mừng trở lại! Vui lòng đăng nhập vào tài khoản của bạn.
+                Nhập mật khẩu mới cho tài khoản của bạn.
               </Typography>
 
-              <Box
-                component="form"
-                onSubmit={handleSubmit(onSubmit)}
-                noValidate
-              >
-                {/* Email */}
-                <Controller
-                  name="email"
-                  control={control}
-                  render={({ field }) => (
-                    <TextField
-                      {...field}
-                      fullWidth
-                      label="Email"
-                      placeholder="staff@example.com"
-                      margin="normal"
-                      error={!!errors.email}
-                      helperText={errors.email?.message}
-                      InputProps={{
-                        startAdornment: (
-                          <InputAdornment position="start">
-                            <EmailIcon color="action" />
-                          </InputAdornment>
-                        ),
-                      }}
-                    />
-                  )}
-                />
-
+              <Box component="form" onSubmit={handleSubmit(onSubmit)} noValidate>
                 {/* Password */}
                 <Controller
                   name="password"
@@ -202,10 +132,9 @@ export default function LoginPage() {
                     <TextField
                       {...field}
                       fullWidth
-                      label="Mật khẩu"
-                      placeholder="Nhập mật khẩu của bạn"
+                      label="Mật khẩu mới"
                       margin="normal"
-                      type={showPassword ? "text" : "password"}
+                      type={showPw1 ? "text" : "password"}
                       error={!!errors.password}
                       helperText={errors.password?.message}
                       InputProps={{
@@ -216,14 +145,8 @@ export default function LoginPage() {
                         ),
                         endAdornment: (
                           <InputAdornment position="end">
-                            <IconButton
-                              onClick={() => setShowPassword((s) => !s)}
-                            >
-                              {showPassword ? (
-                                <VisibilityOff />
-                              ) : (
-                                <Visibility />
-                              )}
+                            <IconButton onClick={() => setShowPw1((s) => !s)}>
+                              {showPw1 ? <VisibilityOff /> : <Visibility />}
                             </IconButton>
                           </InputAdornment>
                         ),
@@ -232,27 +155,36 @@ export default function LoginPage() {
                   )}
                 />
 
-                <Box
-                  sx={{
-                    display: "flex",
-                    alignItems: "center",
-                    justifyContent: "space-between",
-                    mt: 1,
-                  }}
-                >
-                  <FormControlLabel
-                    control={<Checkbox />}
-                    label="Ghi nhớ đăng nhập"
-                  />
-                  <Link
-                    href="/forgot-password"
-                    underline="none"
-                    variant="body2"
-                    color="success"
-                  >
-                    Quên mật khẩu?
-                  </Link>
-                </Box>
+                {/* Confirm Password */}
+                <Controller
+                  name="confirmPassword"
+                  control={control}
+                  render={({ field }) => (
+                    <TextField
+                      {...field}
+                      fullWidth
+                      label="Xác nhận mật khẩu"
+                      margin="normal"
+                      type={showPw2 ? "text" : "password"}
+                      error={!!errors.confirmPassword}
+                      helperText={errors.confirmPassword?.message}
+                      InputProps={{
+                        startAdornment: (
+                          <InputAdornment position="start">
+                            <LockOutlinedIcon color="action" />
+                          </InputAdornment>
+                        ),
+                        endAdornment: (
+                          <InputAdornment position="end">
+                            <IconButton onClick={() => setShowPw2((s) => !s)}>
+                              {showPw2 ? <VisibilityOff /> : <Visibility />}
+                            </IconButton>
+                          </InputAdornment>
+                        ),
+                      }}
+                    />
+                  )}
+                />
 
                 <Button
                   type="submit"
@@ -266,8 +198,14 @@ export default function LoginPage() {
                     textTransform: "none",
                   }}
                 >
-                  Đăng nhập
+                  Xác nhận
                 </Button>
+              </Box>
+
+              <Box sx={{ mt: 3, textAlign: "center" }}>
+                <Link href="/login" underline="none" color="success" variant="body2">
+                  Quay lại đăng nhập
+                </Link>
               </Box>
 
               <Divider sx={{ my: 3 }} />
